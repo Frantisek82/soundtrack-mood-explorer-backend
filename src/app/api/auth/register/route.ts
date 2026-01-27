@@ -3,6 +3,19 @@ import User from "@/models/User";
 import { connectDB } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "http://localhost:3001",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: CORS_HEADERS,
+  });
+}
+
 export async function POST(req: Request) {
   try {
     const { name, email, password } = await req.json();
