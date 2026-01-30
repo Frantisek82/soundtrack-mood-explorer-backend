@@ -82,3 +82,44 @@ export async function GET(req: Request) {
     );
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const auth = req.headers.get("authorization");
+    if (!auth) {
+      return NextResponse.json(
+        { message: "Unauthorized" },
+        { status: 401, headers: CORS_HEADERS }
+      );
+    }
+
+    const token = auth.split(" ")[1];
+    const { id: userId } = verifyToken(token);
+
+    const { soundtrackId } = await req.json();
+
+    await connectDB();
+
+    const result = await Favorite.findOneAndDelete({
+      userId,
+      soundtrackId,
+    });
+
+    if (!result) {
+      return NextResponse.json(
+        { message: "Favorite not found" },
+        { status: 404, headers: CORS_HEADERS }
+      );
+    }
+
+    return NextResponse.json(
+      { message: "Favorite removed" },
+      { headers: CORS_HEADERS }
+    );
+  } catch {
+    return NextResponse.json(
+      { message: "Failed to remove favorite" },
+      { status: 500, headers: CORS_HEADERS }
+    );
+  }
+}
