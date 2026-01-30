@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import User from "@/models/User";
 import { connectDB } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
+import type { Soundtrack } from "@/types/soundtrack";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "http://localhost:3001",
