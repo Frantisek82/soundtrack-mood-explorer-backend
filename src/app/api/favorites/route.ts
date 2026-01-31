@@ -2,123 +2,108 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Favorite from "@/models/Favorite";
 import { verifyToken } from "@/lib/jwt";
-import type { Soundtrack } from "@/types/soundtrack";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "http://localhost:3001",
-  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Credentials": "true",
 };
 
+/**
+ * CORS preflight
+ */
 export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+  return NextResponse.json({}, { headers: CORS_HEADERS });
 }
 
-export async function POST(req: Request) {
-  try {
-    const auth = req.headers.get("authorization");
-    if (!auth) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401, headers: CORS_HEADERS },
-      );
-    }
-
-    const token = auth.split(" ")[1];
-    const { id: userId } = verifyToken(token);
-
-    const { soundtrackId } = await req.json();
-
-    await connectDB();
-
-    const favorite = await Favorite.create({
-      userId,
-      soundtrackId,
-    });
-
-    return NextResponse.json(favorite, {
-      status: 201,
-      headers: CORS_HEADERS,
-    });
-  } catch (error: any) {
-    if (error.code === 11000) {
-      return NextResponse.json(
-        { message: "Soundtrack already in favorites" },
-        { status: 409, headers: CORS_HEADERS },
-      );
-    }
-
-    return NextResponse.json(
-      { message: "Failed to add favorite" },
-      { status: 500, headers: CORS_HEADERS },
-    );
-  }
-}
-
+/**
+ * GET /api/favorites
+ * Returns all favorites for the logged-in user
+ */
 export async function GET(req: Request) {
   try {
-    const auth = req.headers.get("authorization");
-    if (!auth) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401, headers: CORS_HEADERS },
-      );
-    }
-
-    const token = auth.split(" ")[1];
-    const { id: userId } = verifyToken(token);
-
     await connectDB();
 
-    const favorites = await Favorite.find({ userId }).populate("soundtrackId");
+    const authHeader = req.headers.get("authorization");
 
-    return NextResponse.json(favorites, {
-      headers: CORS_HEADERS,
-    });
-  } catch {
-    return NextResponse.json(
-      { message: "Failed to fetch favorites" },
-      { status: 500, headers: CORS_HEADERS },
-    );
-  }
-}
-
-export async function DELETE(req: Request) {
-  try {
-    const auth = req.headers.get("authorization");
-    if (!auth) {
+    if (!authHeader) {
       return NextResponse.json(
         { message: "Unauthorized" },
         { status: 401, headers: CORS_HEADERS }
       );
     }
 
-    const token = auth.split(" ")[1];
-    const { id: userId } = verifyToken(token);
+    const token = authHeader.split(" ")[1];
+    const decoded = verifyToken(token);
 
-    const { soundtrackId } = await req.json();
+    const favorites = await Favorite.find({
+      userId: decoded.id,
+    }).populate("soundtrackId");
 
+    return NextResponse.json(favorites, {
+      headers: CORS_HEADERS,
+    });
+  } catch (error) {
+    console.error("Get favorites error:", error);
+
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500, headers: CORS_HEADERS }
+    );
+  }
+}
+
+/**
+ * POST /api/favorites
+ * Adds a soundtrack to favorites
+ */
+export async function POST(req: Request) {
+  try {
     await connectDB();
 
-    const result = await Favorite.findOneAndDelete({
-      userId,
-      soundtrackId,
-    });
+    const authHeader = req.headers.get("authorization");
 
-    if (!result) {
+    if (!authHeader) {
       return NextResponse.json(
-        { message: "Favorite not found" },
-        { status: 404, headers: CORS_HEADERS }
+        { message: "Unauthorized" },
+        { status: 401, headers: CORS_HEADERS }
       );
     }
 
+    const token = authHeader.split(" ")[1];
+    const decoded = verifyToken(token);
+
+    const { soundtrackId } = await req.json();
+
+    if (!soundtrackId) {
+      return NextResponse.json(
+        { message: "soundtrackId is required" },
+        { status: 400, headers: CORS_HEADERS }
+      );
+    }
+
+    const favorite = await Favorite.create({
+      userId: decoded.id,
+      soundtrackId,
+    });
+
+    return NextResponse.json(favorite, {
+      headers: CORS_HEADERS,
+    });
+  } catch (error: any) {
+    // Handle duplicate favorite gracefully
+    if (error.code === 11000) {
+      return NextResponse.json(
+        { message: "Already in favorites" },
+        { status: 409, headers: CORS_HEADERS }
+      );
+    }
+
+    console.error("Add favorite error:", error);
+
     return NextResponse.json(
-      { message: "Favorite removed" },
-      { headers: CORS_HEADERS }
-    );
-  } catch {
-    return NextResponse.json(
-      { message: "Failed to remove favorite" },
+      { message: "Internal server error" },
       { status: 500, headers: CORS_HEADERS }
     );
   }

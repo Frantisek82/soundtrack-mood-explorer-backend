@@ -8,6 +8,7 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "http://localhost:3001",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Credentials": "true"
 };
 
 export async function OPTIONS() {
