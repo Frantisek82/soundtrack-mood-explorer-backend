@@ -7,9 +7,10 @@ const SoundtrackSchema = new Schema(
     movie: { type: String, required: true },
     composer: { type: String, required: true },
     moods: [{ type: String }], // simple for now
+    spotifyTrackId: { type: String }, // 🎵 NEW
   },
   { timestamps: true }
 );
 
 export default models.Soundtrack ||
-  mongoose.model("Soundtrack", SoundtrackSchema);
+  mongoose.model<Soundtrack>("Soundtrack", SoundtrackSchema);

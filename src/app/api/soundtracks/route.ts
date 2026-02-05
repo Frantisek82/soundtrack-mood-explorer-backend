@@ -31,7 +31,7 @@ export async function GET(req: Request) {
   } catch (error) {
     return NextResponse.json(
       { message: "Failed to fetch soundtracks" },
-      { status: 500, headers: CORS_HEADERS }
+      { status: 500, headers: CORS_HEADERS },
     );
   }
 }

@@ -24,7 +24,7 @@ export async function OPTIONS() {
  */
 export async function DELETE(
   req: Request,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     await connectDB();
@@ -36,7 +36,7 @@ export async function DELETE(
     if (!authHeader) {
       return NextResponse.json(
         { message: "Unauthorized" },
-        { status: 401, headers: CORS_HEADERS }
+        { status: 401, headers: CORS_HEADERS },
       );
     }
 
@@ -49,16 +49,13 @@ export async function DELETE(
       soundtrackId: new mongoose.Types.ObjectId(id),
     });
 
-    return NextResponse.json(
-      { success: true },
-      { headers: CORS_HEADERS }
-    );
+    return NextResponse.json({ success: true }, { headers: CORS_HEADERS });
   } catch (error) {
     console.error("Delete favorite error:", error);
 
     return NextResponse.json(
       { message: "Internal server error" },
-      { status: 500, headers: CORS_HEADERS }
+      { status: 500, headers: CORS_HEADERS },
     );
   }
 }

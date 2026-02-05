@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     if (!name || !email || !password) {
       return NextResponse.json(
         { message: "All fields are required" },
-        { status: 400, headers: CORS_HEADERS }
+        { status: 400, headers: CORS_HEADERS },
       );
     }
 
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     if (existingUser) {
       return NextResponse.json(
         { message: "User already exists" },
-        { status: 409, headers: CORS_HEADERS }
+        { status: 409, headers: CORS_HEADERS },
       );
     }
 
@@ -51,14 +51,14 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       { message: "User registered successfully" },
-      { status: 201, headers: CORS_HEADERS }
+      { status: 201, headers: CORS_HEADERS },
     );
   } catch (error) {
     console.error("Register error:", error);
 
     return NextResponse.json(
       { message: "Internal server error" },
-      { status: 500, headers: CORS_HEADERS }
+      { status: 500, headers: CORS_HEADERS },
     );
   }
 }

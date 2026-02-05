@@ -1,36 +1,41 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import mongoose from "mongoose";
 import Favorite from "@/models/Favorite";
 import { verifyToken } from "@/lib/jwt";
+import { connectDB } from "@/lib/db";
 
-const CORS_HEADERS = {
+/**
+ * CORS configuration
+ */
+const corsHeaders = {
   "Access-Control-Allow-Origin": "http://localhost:3001",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  "Access-Control-Allow-Credentials": "true",
 };
 
 /**
- * CORS preflight
+ * Preflight request handler (REQUIRED for CORS)
  */
 export async function OPTIONS() {
-  return NextResponse.json({}, { headers: CORS_HEADERS });
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
 }
 
 /**
  * GET /api/favorites
- * Returns all favorites for the logged-in user
+ * Returns Soundtrack[]
  */
 export async function GET(req: Request) {
   try {
     await connectDB();
 
     const authHeader = req.headers.get("authorization");
-
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json(
         { message: "Unauthorized" },
-        { status: 401, headers: CORS_HEADERS }
+        { status: 401, headers: corsHeaders }
       );
     }
 
@@ -38,36 +43,39 @@ export async function GET(req: Request) {
     const decoded = verifyToken(token);
 
     const favorites = await Favorite.find({
-      userId: decoded.id,
+      userId: new mongoose.Types.ObjectId(decoded.id),
     }).populate("soundtrackId");
 
-    return NextResponse.json(favorites, {
-      headers: CORS_HEADERS,
+    // Normalize: return Soundtrack[]
+    const soundtracks = favorites
+      .map((fav) => fav.soundtrackId)
+      .filter(Boolean);
+
+    return NextResponse.json(soundtracks, {
+      headers: corsHeaders,
     });
   } catch (error) {
-    console.error("Get favorites error:", error);
-
+    console.error("GET /favorites error:", error);
     return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500, headers: CORS_HEADERS }
+      { message: "Failed to load favorites" },
+      { status: 500, headers: corsHeaders }
     );
   }
 }
 
 /**
  * POST /api/favorites
- * Adds a soundtrack to favorites
+ * Add soundtrack to favorites
  */
 export async function POST(req: Request) {
   try {
     await connectDB();
 
     const authHeader = req.headers.get("authorization");
-
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json(
         { message: "Unauthorized" },
-        { status: 401, headers: CORS_HEADERS }
+        { status: 401, headers: corsHeaders }
       );
     }
 
@@ -76,35 +84,27 @@ export async function POST(req: Request) {
 
     const { soundtrackId } = await req.json();
 
-    if (!soundtrackId) {
-      return NextResponse.json(
-        { message: "soundtrackId is required" },
-        { status: 400, headers: CORS_HEADERS }
-      );
-    }
-
     const favorite = await Favorite.create({
-      userId: decoded.id,
-      soundtrackId,
+      userId: new mongoose.Types.ObjectId(decoded.id),
+      soundtrackId: new mongoose.Types.ObjectId(soundtrackId),
     });
 
     return NextResponse.json(favorite, {
-      headers: CORS_HEADERS,
+      status: 201,
+      headers: corsHeaders,
     });
   } catch (error: any) {
-    // Handle duplicate favorite gracefully
     if (error.code === 11000) {
       return NextResponse.json(
         { message: "Already in favorites" },
-        { status: 409, headers: CORS_HEADERS }
+        { status: 409, headers: corsHeaders }
       );
     }
 
-    console.error("Add favorite error:", error);
-
+    console.error("POST /favorites error:", error);
     return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500, headers: CORS_HEADERS }
+      { message: "Failed to add favorite" },
+      { status: 500, headers: corsHeaders }
     );
   }
 }
