@@ -1,5 +1,6 @@
 # 🎬🎵 Soundtrack Mood Explorer
 A backend service for the Soundtrack Mood Explorer application, responsible for authentication, data persistence, and REST API endpoints.
+
 Built as a portfolio project to demonstrate backend development with JWT authentication, MongoDB, and clean RESTful API design.
 
 ## 🚀 Features
@@ -28,6 +29,15 @@ backend/
  └── ...
 ```
 The frontend and backend communicate only via HTTP requests, making them fully decoupled.
+
+## 🏗 Architecture Overview
+
+![Backend architecture](docs/diagrams/architecture.png)
+
+The backend exposes REST API endpoints using Next.js API routes.
+Authentication is handled via JWT, and data is persisted in MongoDB using Mongoose.
+The frontend communicates exclusively via HTTP requests.
+
 
 ## 🔐 Authentication
 - Authentication is handled using JSON Web Tokens (JWT)
