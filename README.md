@@ -38,6 +38,11 @@ The backend exposes REST API endpoints using Next.js API routes.
 Authentication is handled via JWT, and data is persisted in MongoDB using Mongoose.
 The frontend communicates exclusively via HTTP requests.
 
+## 🏗 Project Architecture
+- Frontend: Next.js (Port 3001)
+- Backend API: Next.js API Routes (Port 3000)
+- Database: MongoDB (Local)
+The frontend communicates with the backend using the NEXT_PUBLIC_API_URL environment variable.
 
 ## 🔐 Authentication
 - Authentication is handled using JSON Web Tokens (JWT)
@@ -134,21 +139,37 @@ Authorization: Bearer <JWT_TOKEN>
 - Clear separation of concerns (routes, models, utils)
 
 ## ⚙️ Environment Variables
-
-Create a `.env` file in the backend root:
-
-```bash
-MONGODB_URI=mongodb://localhost:27017/soundtrack-explorer
-JWT_SECRET=your_jwt_secret_here
+Create a .env.local file in the root of the backend project with the following variables:
 ```
+MONGODB_URI=mongodb://localhost:27017/soundtrack-explorer
+PORT=3000
+JWT_SECRET=super_secret_key_123
+```
+- `MONGODB_URI` - MongoDB connection string
+- `PORT` - Port where the backend API runs
+- `JWT_SECRET` - Secret key used for authentication
 
-## ▶️ Running the Project Locally
-```bash
-cd backend
+## ▶️ Running the Backend
+1. Install dependencies:
+```
 npm install
+```
+2. Start the development server:
+```
 npm run dev
 ```
- - Backend API: http://localhost:3000
+The Backend API will run at:
+```
+http://localhost:3000
+```
+API routes are available under:
+```
+http://localhost:3000/api
+```
+Example:
+```
+http://localhost:3000/api/soundtracks
+```
 
   ## 🧪 Tested Use Cases
  - Register & login
