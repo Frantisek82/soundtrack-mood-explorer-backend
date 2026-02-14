@@ -13,12 +13,14 @@ export async function POST() {
       movie: "Inception",
       composer: "Hans Zimmer",
       moods: ["Epic", "Emotional"],
+      spotifyTrackId: "6ZFbXIJkuI1dVNWvzJzown",
     },
     {
       title: "Cornfield Chase",
       movie: "Interstellar",
       composer: "Hans Zimmer",
       moods: ["Calm"],
+      spotifyTrackId: "6pWgRkpqVfxnj3WuIcJ7WP",
     },
   ]);
 
