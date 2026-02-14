@@ -163,6 +163,8 @@ v1.2.0
 
 ## 👤 Author
 Frantisek Babinsky
+
 Junior Full-Stack Developer
+
 
 Built as a professional portfolio project.
