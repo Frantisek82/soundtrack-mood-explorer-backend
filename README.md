@@ -89,7 +89,7 @@ Authorization: Bearer <JWT_TOKEN>
 ```
 in the request headers for protected routes.
 
-# Protected Endpoints
+### Protected Endpoints
 | Method | Endpoint                  |
 | ------ | ------------------------- |
 | GET    | `/api/favorites`          |
