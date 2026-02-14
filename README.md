@@ -103,7 +103,7 @@ Unauthorized requests return:
 
 ## 📡 API Endpoints
 
-# 🎫 Auth
+### 🎫 Auth
 
 **POST** /api/auth/register
 Register new user.
@@ -114,7 +114,7 @@ Returns:
 { "token": "JWT_TOKEN" }
 ```
 
-# 🎼 Soundtracks
+### 🎼 Soundtracks
 
 **GET** /api/soundtracks
 Returns all soundtracks.
@@ -148,7 +148,7 @@ Current stable backend version:
 ```
 v1.2.0
 ```
-# v1.2.0 Updates
+### v1.2.0 Updates
 - Added `spotifyTrackId` support
 - Improved seed endpoint
 - Updated documentation
