@@ -8,6 +8,7 @@ Responsible for:
 - Favorites management
 - Database seeding
 - REST API endpoints
+
 Built as part of a full-stack portfolio project.
 
 ## 🚀 Features
