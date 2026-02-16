@@ -11,6 +11,11 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Credentials": "true",
 };
 
+/**
+ * Email validation regex
+ */
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 export async function OPTIONS() {
   return NextResponse.json({}, { headers: CORS_HEADERS });
 }
@@ -19,12 +24,23 @@ export async function POST(req: Request) {
   try {
     await connectDB();
 
-    const { email, password } = await req.json();
+    let { email, password } = await req.json();
+
+    // Normalize inputs
+    email = email?.trim().toLowerCase();
 
     if (!email || !password) {
       return NextResponse.json(
         { message: "Email and password are required" },
-        { status: 400, headers: CORS_HEADERS },
+        { status: 400, headers: CORS_HEADERS }
+      );
+    }
+
+    // Validate email format
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { message: "Invalid email format" },
+        { status: 400, headers: CORS_HEADERS }
       );
     }
 
@@ -33,7 +49,7 @@ export async function POST(req: Request) {
     if (!user) {
       return NextResponse.json(
         { message: "Invalid credentials" },
-        { status: 401, headers: CORS_HEADERS },
+        { status: 401, headers: CORS_HEADERS }
       );
     }
 
@@ -42,7 +58,7 @@ export async function POST(req: Request) {
     if (!isMatch) {
       return NextResponse.json(
         { message: "Invalid credentials" },
-        { status: 401, headers: CORS_HEADERS },
+        { status: 401, headers: CORS_HEADERS }
       );
     }
 
@@ -59,10 +75,10 @@ export async function POST(req: Request) {
           email: user.email,
         },
       },
-      { headers: CORS_HEADERS },
+      { headers: CORS_HEADERS }
     );
 
-    // ✅ Set auth cookie (backend-side)
+    // Set auth cookie
     response.cookies.set({
       name: "token",
       value: token,
@@ -71,12 +87,13 @@ export async function POST(req: Request) {
     });
 
     return response;
+
   } catch (error) {
     console.error("Login error:", error);
 
     return NextResponse.json(
       { message: "Internal server error" },
-      { status: 500, headers: CORS_HEADERS },
+      { status: 500, headers: CORS_HEADERS }
     );
   }
 }
