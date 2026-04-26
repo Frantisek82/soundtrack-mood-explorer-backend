@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import Favorite from "@/models/Favorite";
 import { verifyToken } from "@/lib/jwt";
 import { connectDB } from "@/lib/db";
+import { cookies } from "next/headers";
 
 /**
  * CORS configuration
@@ -10,11 +11,12 @@ import { connectDB } from "@/lib/db";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "http://localhost:3001",
   "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Credentials": "true",
 };
 
 /**
- * Preflight request handler (REQUIRED for CORS)
+ * Preflight
  */
 export async function OPTIONS() {
   return new Response(null, {
@@ -24,29 +26,33 @@ export async function OPTIONS() {
 }
 
 /**
- * GET /api/favorites
- * Returns Soundtrack[]
+ * Get user from cookie
  */
-export async function GET(req: Request) {
+async function getUserIdFromCookies(): Promise<string> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  if (!token) {
+    throw new Error("Unauthorized");
+  }
+
+  const decoded = verifyToken(token);
+  return decoded.id;
+}
+
+/**
+ * GET /api/favorites
+ */
+export async function GET() {
   try {
     await connectDB();
 
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401, headers: corsHeaders }
-      );
-    }
-
-    const token = authHeader.split(" ")[1];
-    const decoded = verifyToken(token);
+    const userId = await getUserIdFromCookies();
 
     const favorites = await Favorite.find({
-      userId: new mongoose.Types.ObjectId(decoded.id),
+      userId: new mongoose.Types.ObjectId(userId),
     }).populate("soundtrackId");
 
-    // Normalize: return Soundtrack[]
     const soundtracks = favorites
       .map((fav) => fav.soundtrackId)
       .filter(Boolean);
@@ -55,37 +61,26 @@ export async function GET(req: Request) {
       headers: corsHeaders,
     });
   } catch (error) {
-    console.error("GET /favorites error:", error);
     return NextResponse.json(
-      { message: "Failed to load favorites" },
-      { status: 500, headers: corsHeaders }
+      { message: "Unauthorized" },
+      { status: 401, headers: corsHeaders }
     );
   }
 }
 
 /**
  * POST /api/favorites
- * Add soundtrack to favorites
  */
 export async function POST(req: Request) {
   try {
     await connectDB();
 
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401, headers: corsHeaders }
-      );
-    }
-
-    const token = authHeader.split(" ")[1];
-    const decoded = verifyToken(token);
+    const userId = await getUserIdFromCookies();
 
     const { soundtrackId } = await req.json();
 
     const favorite = await Favorite.create({
-      userId: new mongoose.Types.ObjectId(decoded.id),
+      userId: new mongoose.Types.ObjectId(userId),
       soundtrackId: new mongoose.Types.ObjectId(soundtrackId),
     });
 
@@ -101,10 +96,9 @@ export async function POST(req: Request) {
       );
     }
 
-    console.error("POST /favorites error:", error);
     return NextResponse.json(
-      { message: "Failed to add favorite" },
-      { status: 500, headers: corsHeaders }
+      { message: "Unauthorized" },
+      { status: 401, headers: corsHeaders }
     );
   }
 }

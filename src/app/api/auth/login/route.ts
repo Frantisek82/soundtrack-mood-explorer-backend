@@ -7,7 +7,7 @@ import { generateToken } from "@/lib/jwt";
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "http://localhost:3001",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers": "Content-Type",
   "Access-Control-Allow-Credentials": "true",
 };
 
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     if (!email || !password) {
       return NextResponse.json(
         { message: "Email and password are required" },
-        { status: 400, headers: CORS_HEADERS }
+        { status: 400, headers: CORS_HEADERS },
       );
     }
 
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     if (!emailRegex.test(email)) {
       return NextResponse.json(
         { message: "Invalid email format" },
-        { status: 400, headers: CORS_HEADERS }
+        { status: 400, headers: CORS_HEADERS },
       );
     }
 
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     if (!user) {
       return NextResponse.json(
         { message: "Invalid credentials" },
-        { status: 401, headers: CORS_HEADERS }
+        { status: 401, headers: CORS_HEADERS },
       );
     }
 
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     if (!isMatch) {
       return NextResponse.json(
         { message: "Invalid credentials" },
-        { status: 401, headers: CORS_HEADERS }
+        { status: 401, headers: CORS_HEADERS },
       );
     }
 
@@ -69,31 +69,33 @@ export async function POST(req: Request) {
 
     const response = NextResponse.json(
       {
-        token,
+        message: "Login successful",
         user: {
           id: user._id,
           email: user.email,
         },
       },
-      { headers: CORS_HEADERS }
+      { headers: CORS_HEADERS },
     );
 
-    // Set auth cookie
+    // PRODUCTION-GRADE COOKIE
     response.cookies.set({
       name: "token",
       value: token,
-      path: "/",
+      httpOnly: true, // not accessible from JS
+      secure: process.env.NODE_ENV === "production", // HTTPS only in production
       sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24, // 1 day
     });
 
     return response;
-
   } catch (error) {
     console.error("Login error:", error);
 
     return NextResponse.json(
       { message: "Internal server error" },
-      { status: 500, headers: CORS_HEADERS }
+      { status: 500, headers: CORS_HEADERS },
     );
   }
 }
