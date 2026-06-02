@@ -3,6 +3,9 @@ import { connectDB } from "@/lib/db";
 import Soundtrack from "@/models/Soundtrack";
 
 export async function POST() {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
   await connectDB();
 
   await Soundtrack.deleteMany();
