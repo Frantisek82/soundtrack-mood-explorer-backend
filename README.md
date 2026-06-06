@@ -24,6 +24,32 @@ Responsible for:
 
 ---
 
+## 🚀 Deployment
+
+Backend is deployed on Vercel.
+
+Database is hosted on MongoDB Atlas.
+
+Authentication uses secure httpOnly cookies with cross-origin support:
+
+* Secure
+* HttpOnly
+* SameSite=None
+
+---
+
+## 🌐 Live API
+
+Production API:
+
+https://soundtrack-mood-explorer-backend.vercel.app
+
+Health Check:
+
+https://soundtrack-mood-explorer-backend.vercel.app/api/health
+
+---
+
 ## 🔐 Authentication (v1.4.0)
 
 Authentication uses **httpOnly cookies**:
@@ -51,7 +77,7 @@ All endpoints are protected and require authentication.
 * Next.js (App Router API)
 * Node.js
 * TypeScript
-* MongoDB
+* MongoDB Atlas
 * Mongoose
 * JSON Web Tokens (JWT)
 
@@ -60,8 +86,7 @@ All endpoints are protected and require authentication.
 ## ⚙️ Environment Variables
 
 ```
-MONGODB_URI=mongodb://localhost:27017/soundtrack-explorer
-PORT=3000
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/soundtrack-explorer
 JWT_SECRET=your_super_secret_key
 ```
 
@@ -92,12 +117,39 @@ fetch("http://localhost:3000/api/seed", { method: "POST" })
 
 ## 🌍 CORS Configuration
 
-Supports credentials:
+Development:
 
 ```
 Access-Control-Allow-Origin: http://localhost:3001
+```
+
+Production:
+
+```
+Access-Control-Allow-Origin: https://soundtrack-mood-explorer-frontend.vercel.app
+```
+
+```
 Access-Control-Allow-Credentials: true
 ```
+
+---
+
+## 🏗 Architecture
+
+Frontend (Next.js)\
+        ↓
+
+Vercel Frontend\
+        ↓
+        
+Backend API (Next.js Route Handlers)\
+        ↓
+        
+Vercel Backend\
+        ↓
+        
+MongoDB Atlas
 
 ---
 
@@ -106,26 +158,29 @@ Access-Control-Allow-Credentials: true
 Current version:
 
 ```
-v1.4.0
+v1.5.0
 ```
 
-### v1.4.0 Highlights
+### v1.5.0 Highlights
 
-* 🔐 Migrated to cookie-based authentication
-* ⭐ Fixed favorites persistence and deletion
-* 🧠 Implemented async params handling (Next.js)
-* 🌍 Improved CORS configuration
-* ⚙ Stabilized API endpoints
+* 🚀 Deployed backend to Vercel
+* ☁️ Migrated database to MongoDB Atlas
+* 🔐 Implemented production-ready cross-site authentication
+* 🌍 Centralized CORS configuration
+* ⭐ Stabilized favorites CRUD operations
+* 🛡️ Improved security and cookie handling
+* ⚙️ Production environment configuration
 
 ---
 
 ## 🧩 Future Improvements
 
 * Rate limiting
-* Logging improvements
-* Unit/integration testing
-* Deployment (MongoDB Atlas)
+* Request logging and monitoring
+* Unit and integration testing
 * Token refresh mechanism
+* API documentation (OpenAPI / Swagger)
+* Admin endpoints
 
 ---
 
