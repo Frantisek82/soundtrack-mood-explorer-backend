@@ -29,9 +29,30 @@ export async function GET(req: Request) {
       headers: CORS_HEADERS,
     });
   } catch (error) {
+    console.error("GET /soundtracks error:", error);
+
     return NextResponse.json(
-      { message: "Failed to fetch soundtracks" },
-      { status: 500, headers: CORS_HEADERS },
+      {
+        message: "Failed to fetch soundtracks",
+        error:
+          error instanceof Error
+            ? {
+                name: error.name,
+                message: error.message,
+                stack: error.stack,
+              }
+            : String(error),
+      },
+      {
+        status: 500,
+        headers: CORS_HEADERS,
+      },
     );
   }
+  // } catch (error) {
+  //   return NextResponse.json(
+  //     { message: "Failed to fetch soundtracks" },
+  //     { status: 500, headers: CORS_HEADERS },
+  //   );
+  // }
 }
