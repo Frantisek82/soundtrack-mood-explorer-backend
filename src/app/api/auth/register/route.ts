@@ -2,13 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
-
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "http://localhost:3001",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Allow-Credentials": "true",
-};
+import { CORS_HEADERS } from "@/lib/cors";
 
 /**
  * Email validation regex
@@ -42,7 +36,7 @@ export async function POST(req: Request) {
     if (!name || !email || !password) {
       return NextResponse.json(
         { message: "All fields are required" },
-        { status: 400, headers: CORS_HEADERS }
+        { status: 400, headers: CORS_HEADERS },
       );
     }
 
@@ -50,7 +44,7 @@ export async function POST(req: Request) {
     if (!emailRegex.test(email)) {
       return NextResponse.json(
         { message: "Invalid email format" },
-        { status: 400, headers: CORS_HEADERS }
+        { status: 400, headers: CORS_HEADERS },
       );
     }
 
@@ -58,7 +52,7 @@ export async function POST(req: Request) {
     if (password.length < 6) {
       return NextResponse.json(
         { message: "Password must be at least 6 characters long" },
-        { status: 400, headers: CORS_HEADERS }
+        { status: 400, headers: CORS_HEADERS },
       );
     }
 
@@ -66,7 +60,7 @@ export async function POST(req: Request) {
     if (existingUser) {
       return NextResponse.json(
         { message: "User already exists" },
-        { status: 409, headers: CORS_HEADERS }
+        { status: 409, headers: CORS_HEADERS },
       );
     }
 
@@ -80,15 +74,14 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       { message: "User registered successfully" },
-      { status: 201, headers: CORS_HEADERS }
+      { status: 201, headers: CORS_HEADERS },
     );
-
   } catch (error) {
     console.error("Register error:", error);
 
     return NextResponse.json(
       { message: "Internal server error" },
-      { status: 500, headers: CORS_HEADERS }
+      { status: 500, headers: CORS_HEADERS },
     );
   }
 }

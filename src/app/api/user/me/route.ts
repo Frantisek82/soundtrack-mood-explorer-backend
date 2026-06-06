@@ -11,12 +11,7 @@ import { connectDB } from "@/lib/db";
 /**
  * CORS configuration
  */
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "http://localhost:3001",
-  "Access-Control-Allow-Methods": "GET, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Allow-Credentials": "true",
-};
+import { CORS_HEADERS } from "@/lib/cors";
 
 /**
  * Handle preflight (CORS)
@@ -24,7 +19,7 @@ const corsHeaders = {
 export async function OPTIONS() {
   return new Response(null, {
     status: 204,
-    headers: corsHeaders,
+    headers: CORS_HEADERS,
   });
 }
 

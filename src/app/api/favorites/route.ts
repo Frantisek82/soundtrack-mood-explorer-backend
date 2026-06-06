@@ -8,12 +8,7 @@ import { cookies } from "next/headers";
 /**
  * CORS configuration
  */
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "http://localhost:3001",
-  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Allow-Credentials": "true",
-};
+import { CORS_HEADERS } from "@/lib/cors";
 
 /**
  * Preflight
@@ -21,7 +16,7 @@ const corsHeaders = {
 export async function OPTIONS() {
   return new Response(null, {
     status: 204,
-    headers: corsHeaders,
+    headers: CORS_HEADERS,
   });
 }
 
@@ -63,7 +58,7 @@ export async function GET() {
   } catch (error) {
     return NextResponse.json(
       { message: "Unauthorized" },
-      { status: 401, headers: corsHeaders }
+      { status: 401, headers: corsHeaders },
     );
   }
 }
@@ -92,13 +87,13 @@ export async function POST(req: Request) {
     if (error.code === 11000) {
       return NextResponse.json(
         { message: "Already in favorites" },
-        { status: 409, headers: corsHeaders }
+        { status: 409, headers: corsHeaders },
       );
     }
 
     return NextResponse.json(
       { message: "Unauthorized" },
-      { status: 401, headers: corsHeaders }
+      { status: 401, headers: corsHeaders },
     );
   }
 }

@@ -4,13 +4,7 @@ import { connectDB } from "@/lib/db";
 import Favorite from "@/models/Favorite";
 import { verifyToken } from "@/lib/jwt";
 import { cookies } from "next/headers";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "http://localhost:3001",
-  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Allow-Credentials": "true",
-};
+import { CORS_HEADERS } from "@/lib/cors";
 
 /**
  * CORS preflight
@@ -18,7 +12,7 @@ const corsHeaders = {
 export async function OPTIONS() {
   return new Response(null, {
     status: 204,
-    headers: corsHeaders,
+    headers: CORS_HEADERS,
   });
 }
 

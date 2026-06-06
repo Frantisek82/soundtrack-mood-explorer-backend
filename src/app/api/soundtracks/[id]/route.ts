@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Soundtrack from "@/models/Soundtrack";
-
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "http://localhost:3001",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-};
+import { CORS_HEADERS } from "@/lib/cors";
 
 export async function OPTIONS() {
   return new NextResponse(null, {

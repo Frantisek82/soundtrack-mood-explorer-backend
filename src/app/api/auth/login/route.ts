@@ -3,13 +3,7 @@ import bcrypt from "bcryptjs";
 import User from "@/models/User";
 import { connectDB } from "@/lib/db";
 import { generateToken } from "@/lib/jwt";
-
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "http://localhost:3001",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Allow-Credentials": "true",
-};
+import { CORS_HEADERS } from "@/lib/cors";
 
 /**
  * Email validation regex
