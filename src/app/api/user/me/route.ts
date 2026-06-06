@@ -52,17 +52,17 @@ export async function GET() {
     if (!user) {
       return NextResponse.json(
         { message: "User not found" },
-        { status: 404, headers: corsHeaders },
+        { status: 404, headers: CORS_HEADERS },
       );
     }
 
     return NextResponse.json(user, {
-      headers: corsHeaders,
+      headers: CORS_HEADERS,
     });
   } catch {
     return NextResponse.json(
       { message: "Unauthorized" },
-      { status: 401, headers: corsHeaders },
+      { status: 401, headers: CORS_HEADERS },
     );
   }
 }
@@ -80,7 +80,7 @@ export async function PUT(req: Request) {
     if (!password || password.length < 6) {
       return NextResponse.json(
         { message: "Password must be at least 6 characters long" },
-        { status: 400, headers: corsHeaders },
+        { status: 400, headers: CORS_HEADERS },
       );
     }
 
@@ -92,12 +92,12 @@ export async function PUT(req: Request) {
 
     return NextResponse.json(
       { message: "Password updated successfully" },
-      { headers: corsHeaders },
+      { headers: CORS_HEADERS },
     );
   } catch {
     return NextResponse.json(
       { message: "Unauthorized" },
-      { status: 401, headers: corsHeaders },
+      { status: 401, headers: CORS_HEADERS },
     );
   }
 }
@@ -121,7 +121,7 @@ export async function DELETE() {
 
     const response = NextResponse.json(
       { message: "Account deleted successfully" },
-      { headers: corsHeaders },
+      { headers: CORS_HEADERS },
     );
 
     // Clear auth cookie after deletion
@@ -136,7 +136,7 @@ export async function DELETE() {
   } catch {
     return NextResponse.json(
       { message: "Unauthorized" },
-      { status: 401, headers: corsHeaders },
+      { status: 401, headers: CORS_HEADERS },
     );
   }
 }
