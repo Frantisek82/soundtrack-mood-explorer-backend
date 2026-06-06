@@ -53,12 +53,12 @@ export async function GET() {
       .filter(Boolean);
 
     return NextResponse.json(soundtracks, {
-      headers: corsHeaders,
+      headers: CORS_HEADERS,
     });
   } catch (error) {
     return NextResponse.json(
       { message: "Unauthorized" },
-      { status: 401, headers: corsHeaders },
+      { status: 401, headers: CORS_HEADERS },
     );
   }
 }
@@ -81,19 +81,19 @@ export async function POST(req: Request) {
 
     return NextResponse.json(favorite, {
       status: 201,
-      headers: corsHeaders,
+      headers: CORS_HEADERS,
     });
   } catch (error: any) {
     if (error.code === 11000) {
       return NextResponse.json(
         { message: "Already in favorites" },
-        { status: 409, headers: corsHeaders },
+        { status: 409, headers: CORS_HEADERS },
       );
     }
 
     return NextResponse.json(
       { message: "Unauthorized" },
-      { status: 401, headers: corsHeaders },
+      { status: 401, headers: CORS_HEADERS },
     );
   }
 }

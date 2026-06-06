@@ -52,12 +52,12 @@ export async function GET(
 
     return NextResponse.json(
       { isFavorite: !!favorite },
-      { headers: corsHeaders },
+      { headers: CORS_HEADERS },
     );
   } catch {
     return NextResponse.json(
       { message: "Unauthorized" },
-      { status: 401, headers: corsHeaders },
+      { status: 401, headers: CORS_HEADERS },
     );
   }
 }
@@ -81,13 +81,13 @@ export async function DELETE(
       soundtrackId: id,
     });
 
-    return NextResponse.json({ success: true }, { headers: corsHeaders });
+    return NextResponse.json({ success: true }, { headers: CORS_HEADERS });
   } catch (error) {
     console.error("Delete favorite error:", error);
 
     return NextResponse.json(
       { message: "Unauthorized" },
-      { status: 401, headers: corsHeaders },
+      { status: 401, headers: CORS_HEADERS },
     );
   }
 }
