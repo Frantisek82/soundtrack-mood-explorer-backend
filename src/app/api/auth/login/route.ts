@@ -77,8 +77,8 @@ export async function POST(req: Request) {
       name: "token",
       value: token,
       httpOnly: true, // not accessible from JS
-      secure: process.env.NODE_ENV === "production", // HTTPS only in production
-      sameSite: "lax",
+      secure: true, // HTTPS only in production
+      sameSite: "none",
       path: "/",
       maxAge: 60 * 60 * 24, // 1 day
     });
