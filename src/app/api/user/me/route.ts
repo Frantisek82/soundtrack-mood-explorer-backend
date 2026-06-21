@@ -11,15 +11,17 @@ import { connectDB } from "@/lib/db";
 /**
  * CORS configuration
  */
-import { CORS_HEADERS } from "@/lib/cors";
+import { getCorsHeaders } from "@/lib/cors";
 
 /**
  * Handle preflight (CORS)
  */
-export async function OPTIONS() {
+export async function OPTIONS(req: Request) {
+  const origin = req.headers.get("origin");
+
   return new Response(null, {
     status: 204,
-    headers: CORS_HEADERS,
+    headers: getCorsHeaders(origin),
   });
 }
 
@@ -41,7 +43,8 @@ async function getUserIdFromCookies(): Promise<string> {
 /**
  * GET /api/user/me
  */
-export async function GET() {
+export async function GET(req: Request) {
+  const origin = req.headers.get("origin");
   try {
     await connectDB();
 
@@ -52,17 +55,17 @@ export async function GET() {
     if (!user) {
       return NextResponse.json(
         { message: "User not found" },
-        { status: 404, headers: CORS_HEADERS },
+        { status: 404, headers: getCorsHeaders(origin) },
       );
     }
 
     return NextResponse.json(user, {
-      headers: CORS_HEADERS,
+      headers: getCorsHeaders(origin),
     });
   } catch {
     return NextResponse.json(
       { message: "Unauthorized" },
-      { status: 401, headers: CORS_HEADERS },
+      { status: 401, headers: getCorsHeaders(origin) },
     );
   }
 }
@@ -71,6 +74,8 @@ export async function GET() {
  * PUT /api/user/me
  */
 export async function PUT(req: Request) {
+  const origin = req.headers.get("origin");
+
   try {
     await connectDB();
 
@@ -80,7 +85,7 @@ export async function PUT(req: Request) {
     if (!password || password.length < 6) {
       return NextResponse.json(
         { message: "Password must be at least 6 characters long" },
-        { status: 400, headers: CORS_HEADERS },
+        { status: 400, headers: getCorsHeaders(origin) },
       );
     }
 
@@ -92,12 +97,12 @@ export async function PUT(req: Request) {
 
     return NextResponse.json(
       { message: "Password updated successfully" },
-      { headers: CORS_HEADERS },
+      { headers: getCorsHeaders(origin) },
     );
   } catch {
     return NextResponse.json(
       { message: "Unauthorized" },
-      { status: 401, headers: CORS_HEADERS },
+      { status: 401, headers: getCorsHeaders(origin) },
     );
   }
 }
@@ -105,7 +110,9 @@ export async function PUT(req: Request) {
 /**
  * DELETE /api/user/me
  */
-export async function DELETE() {
+export async function DELETE(req: Request) {
+  const origin = req.headers.get("origin");
+
   try {
     await connectDB();
 
@@ -121,7 +128,7 @@ export async function DELETE() {
 
     const response = NextResponse.json(
       { message: "Account deleted successfully" },
-      { headers: CORS_HEADERS },
+      { headers: getCorsHeaders(origin) },
     );
 
     // Clear auth cookie after deletion
@@ -136,7 +143,7 @@ export async function DELETE() {
   } catch {
     return NextResponse.json(
       { message: "Unauthorized" },
-      { status: 401, headers: CORS_HEADERS },
+      { status: 401, headers: getCorsHeaders(origin) },
     );
   }
 }
