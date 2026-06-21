@@ -3,18 +3,26 @@ import bcrypt from "bcryptjs";
 import User from "@/models/User";
 import { connectDB } from "@/lib/db";
 import { generateToken } from "@/lib/jwt";
-import { CORS_HEADERS } from "@/lib/cors";
+import { getCorsHeaders } from "@/lib/cors";
 
 /**
  * Email validation regex
  */
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-export async function OPTIONS() {
-  return NextResponse.json({}, { headers: CORS_HEADERS });
+export async function OPTIONS(req: Request) {
+  const origin = req.headers.get("origin");
+
+  return NextResponse.json(
+    {},
+    {
+      headers: getCorsHeaders(origin),
+    },
+  );
 }
 
 export async function POST(req: Request) {
+  const origin = req.headers.get("origin");
   try {
     await connectDB();
 
@@ -26,7 +34,7 @@ export async function POST(req: Request) {
     if (!email || !password) {
       return NextResponse.json(
         { message: "Email and password are required" },
-        { status: 400, headers: CORS_HEADERS },
+        { status: 400, headers: getCorsHeaders(origin) },
       );
     }
 
@@ -34,7 +42,7 @@ export async function POST(req: Request) {
     if (!emailRegex.test(email)) {
       return NextResponse.json(
         { message: "Invalid email format" },
-        { status: 400, headers: CORS_HEADERS },
+        { status: 400, headers: getCorsHeaders(origin) },
       );
     }
 
@@ -43,7 +51,7 @@ export async function POST(req: Request) {
     if (!user) {
       return NextResponse.json(
         { message: "Invalid credentials" },
-        { status: 401, headers: CORS_HEADERS },
+        { status: 401, headers: getCorsHeaders(origin) },
       );
     }
 
@@ -52,7 +60,7 @@ export async function POST(req: Request) {
     if (!isMatch) {
       return NextResponse.json(
         { message: "Invalid credentials" },
-        { status: 401, headers: CORS_HEADERS },
+        { status: 401, headers: getCorsHeaders(origin) },
       );
     }
 
@@ -69,7 +77,7 @@ export async function POST(req: Request) {
           email: user.email,
         },
       },
-      { headers: CORS_HEADERS },
+      { headers: getCorsHeaders(origin) },
     );
 
     // PRODUCTION-GRADE COOKIE
@@ -89,7 +97,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       { message: "Internal server error" },
-      { status: 500, headers: CORS_HEADERS },
+      { status: 500, headers: getCorsHeaders(origin) },
     );
   }
 }
