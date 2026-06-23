@@ -9,10 +9,12 @@ export async function OPTIONS(req: Request) {
   });
 }
 
-export async function POST() {
+export async function POST(req: Request) {
+  const origin = req.headers.get("origin");
+
   const response = NextResponse.json(
     { message: "Logged out successfully" },
-    { headers: getCorsHeaders() },
+    { headers: getCorsHeaders(origin) },
   );
 
   response.cookies.set({
