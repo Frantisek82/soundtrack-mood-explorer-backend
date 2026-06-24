@@ -4,19 +4,17 @@ import Favorite from "@/models/Favorite";
 import { verifyToken } from "@/lib/jwt";
 import { connectDB } from "@/lib/db";
 import { cookies } from "next/headers";
-
-/**
- * CORS configuration
- */
-import { CORS_HEADERS } from "@/lib/cors";
+import { getCorsHeaders } from "@/lib/cors";
 
 /**
  * Preflight
  */
-export async function OPTIONS() {
+export async function OPTIONS(req: Request) {
+  const origin = req.headers.get("origin");
+
   return new Response(null, {
     status: 204,
-    headers: CORS_HEADERS,
+    headers: getCorsHeaders(origin),
   });
 }
 
@@ -38,7 +36,9 @@ async function getUserIdFromCookies(): Promise<string> {
 /**
  * GET /api/favorites
  */
-export async function GET() {
+export async function GET(req: Request) {
+  const origin = req.headers.get("origin");
+
   try {
     await connectDB();
 
@@ -53,12 +53,15 @@ export async function GET() {
       .filter(Boolean);
 
     return NextResponse.json(soundtracks, {
-      headers: CORS_HEADERS,
+      headers: getCorsHeaders(origin),
     });
   } catch (error) {
     return NextResponse.json(
       { message: "Unauthorized" },
-      { status: 401, headers: CORS_HEADERS },
+      {
+        status: 401,
+        headers: getCorsHeaders(origin),
+      },
     );
   }
 }
@@ -67,6 +70,8 @@ export async function GET() {
  * POST /api/favorites
  */
 export async function POST(req: Request) {
+  const origin = req.headers.get("origin");
+
   try {
     await connectDB();
 
@@ -81,19 +86,25 @@ export async function POST(req: Request) {
 
     return NextResponse.json(favorite, {
       status: 201,
-      headers: CORS_HEADERS,
+      headers: getCorsHeaders(origin),
     });
   } catch (error: any) {
     if (error.code === 11000) {
       return NextResponse.json(
         { message: "Already in favorites" },
-        { status: 409, headers: CORS_HEADERS },
+        {
+          status: 409,
+          headers: getCorsHeaders(origin),
+        },
       );
     }
 
     return NextResponse.json(
       { message: "Unauthorized" },
-      { status: 401, headers: CORS_HEADERS },
+      {
+        status: 401,
+        headers: getCorsHeaders(origin),
+      },
     );
   }
 }
