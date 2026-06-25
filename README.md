@@ -1,6 +1,12 @@
 # 🎬 Soundtrack Mood Explorer — Backend
 
-Backend API for the Soundtrack Mood Explorer application.
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
+![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green)
+![License](https://img.shields.io/badge/License-MIT-yellow)
+![Version](https://img.shields.io/badge/version-v1.6.0-blue)
+
+Backend API for the Soundtrack Mood Explorer, a full-stack portfolio project for discovering and organizing movie soundtracks by mood.
 
 Responsible for:
 
@@ -14,39 +20,35 @@ Responsible for:
 
 ## 🚀 Features
 
-* 🔐 Secure authentication (httpOnly cookies)
-* ⭐ User-specific favorites (full CRUD)
-* 🎵 Spotify preview support (`spotifyTrackId`)
-* 🌱 Development seed endpoint
-* 📦 MongoDB persistence
-* 🌍 CORS support with credentials
-* 🧱 RESTful API design
+- 🔐 Secure authentication (httpOnly cookies)
+- ⭐ User-specific favorites (full CRUD)
+- 🎵 Spotify preview support (`spotifyTrackId`)
+- 🌱 Development seed endpoint
+- 📦 MongoDB persistence
+- 🌍 Dynamic CORS support
+- 🧱 RESTful API design
 
 ---
 
 ## 🚀 Deployment
 
-Backend is deployed on Vercel.
+- Backend: Vercel
+- Database: MongoDB Atlas
 
-Database is hosted on MongoDB Atlas.
+Authentication uses secure httpOnly cookies with cross-origin support.
 
-Authentication uses secure httpOnly cookies with cross-origin support:
+Cookie configuration:
 
-* Secure
-* HttpOnly
-* SameSite=None
+- Secure
+- HttpOnly
+- SameSite=None
 
 ---
 
 ## 🌐 Live API
 
-Production API:
-
-https://soundtrack-mood-explorer-backend.vercel.app
-
-Health Check:
-
-https://soundtrack-mood-explorer-backend.vercel.app/api/health
+- **Production API:** <https://soundtrack-mood-explorer-backend.vercel.app>
+- **Health Check:** <https://soundtrack-mood-explorer-backend.vercel.app/api/health>
 
 ---
 
@@ -58,6 +60,21 @@ Authentication uses **httpOnly cookies**:
 * No localStorage usage
 * Cookie read using `cookies()` in API routes
 * All protected routes validate via cookie
+
+---
+
+## 🌐 Browser Compatibility
+
+Tested successfully with:
+
+- Google Chrome
+- Microsoft Edge
+- Firefox
+- Safari (macOS/iOS)
+
+### Note
+
+Safari's Intelligent Tracking Prevention (ITP) applies stricter rules to cross-site authentication cookies. Some Safari configurations may require privacy settings to be adjusted during testing.
 
 ---
 
@@ -74,12 +91,13 @@ All endpoints are protected and require authentication.
 
 ## 🛠 Tech Stack
 
-* Next.js (App Router API)
-* Node.js
-* TypeScript
-* MongoDB Atlas
-* Mongoose
-* JSON Web Tokens (JWT)
+- Next.js (App Router API)
+- Node.js
+- TypeScript
+- MongoDB Atlas
+- Mongoose
+- JSON Web Tokens (JWT)
+- Vercel
 
 ---
 
@@ -141,19 +159,18 @@ Safari applies stricter privacy rules to cross-site authentication cookies (Inte
 
 ## 🏗 Architecture
 
-Frontend (Next.js)\
-        ↓
-
-Vercel Frontend\
-        ↓
-        
-Backend API (Next.js Route Handlers)\
-        ↓
-        
-Vercel Backend\
-        ↓
-        
+```text
+Frontend
+   │
+   ▼
+REST API
+   │
+   ▼
+Next.js Backend
+   │
+   ▼
 MongoDB Atlas
+```
 
 ---
 
@@ -164,25 +181,6 @@ Current version:
 ```
 v1.6.0
 ```
-
----
-
-## 📦 Release History
-
-### v1.6.0
-
-* Dynamic CORS support
-* Vercel Preview Deployment compatibility
-* Unified CORS implementation across all API routes
-
-### v1.5.0
-
-* Production backend deployment on Vercel
-* MongoDB Atlas integration
-* Production-ready authentication
-* Centralized CORS configuration
-
----
 
 ### v1.6.0 Highlights
 
@@ -195,20 +193,52 @@ v1.6.0
 
 ---
 
+## 📦 Release History
+
+### v1.6.0
+
+- 🌍 Dynamic CORS support
+- 🚀 Vercel Preview Deployment compatibility
+- 🔄 Unified CORS implementation across all API routes
+
+### v1.5.0
+
+- 🚀 Production deployment on Vercel
+- ☁️ MongoDB Atlas integration
+- 🔐 Production-ready authentication
+- 🌍 Centralized CORS configuration
+
+---
+
 ## 🧩 Future Improvements
 
-* Rate limiting
-* Request logging and monitoring
-* Unit and integration testing
-* Token refresh mechanism
-* API documentation (OpenAPI / Swagger)
-* Admin endpoints
+Future improvements include:
+
+- 🚦 Rate limiting
+- 📊 Request logging and monitoring
+- 🧪 Unit and integration testing
+- 🔄 Refresh token support
+- 📖 OpenAPI / Swagger documentation
+- 👤 Administrative endpoints
+
+---
+
+## 📋 Project Management
+
+Development is managed using GitHub Issues and feature branches.
+
+- Feature requests
+- Bug reports
+- Roadmap
+- Release planning
+
+Project planning is maintained in the frontend repository, while this repository focuses on backend implementation.
 
 ---
 
 ## 👤 Author
 
 Frantisek Babinsky,
-Junior Full-Stack Developer
+Full-Stack Developer
 
 Built as a professional portfolio project.
