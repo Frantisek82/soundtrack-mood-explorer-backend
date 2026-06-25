@@ -117,21 +117,25 @@ fetch("http://localhost:3000/api/seed", { method: "POST" })
 
 ## 🌍 CORS Configuration
 
-Development:
+The backend uses dynamic CORS handling through the `getCorsHeaders(origin)` helper.
 
-```
-Access-Control-Allow-Origin: http://localhost:3001
-```
+Supported environments:
 
-Production:
+* Local development (`http://localhost:3001`)
+* Vercel Production
+* Vercel Preview Deployments
 
-```
-Access-Control-Allow-Origin: https://soundtrack-mood-explorer-frontend.vercel.app
-```
+All API routes use the same dynamic CORS strategy, allowing requests from approved frontend origins while supporting secure authentication using httpOnly cookies.
+
+### Credentials
 
 ```
 Access-Control-Allow-Credentials: true
 ```
+
+### Known limitation
+
+Safari applies stricter privacy rules to cross-site authentication cookies (Intelligent Tracking Prevention). On some iOS/macOS Safari configurations, users may need to adjust browser privacy settings for cross-site authentication.
 
 ---
 
@@ -158,18 +162,36 @@ MongoDB Atlas
 Current version:
 
 ```
-v1.5.0
+v1.6.0
 ```
 
-### v1.5.0 Highlights
+---
 
-* 🚀 Deployed backend to Vercel
-* ☁️ Migrated database to MongoDB Atlas
-* 🔐 Implemented production-ready cross-site authentication
-* 🌍 Centralized CORS configuration
-* ⭐ Stabilized favorites CRUD operations
-* 🛡️ Improved security and cookie handling
-* ⚙️ Production environment configuration
+## 📦 Release History
+
+### v1.6.0
+
+* Dynamic CORS support
+* Vercel Preview Deployment compatibility
+* Unified CORS implementation across all API routes
+
+### v1.5.0
+
+* Production backend deployment on Vercel
+* MongoDB Atlas integration
+* Production-ready authentication
+* Centralized CORS configuration
+
+---
+
+### v1.6.0 Highlights
+
+* 🌍 Implemented dynamic CORS handling across all API routes
+* 🚀 Added support for Vercel Preview Deployments
+* 🔄 Standardized CORS implementation using `getCorsHeaders(origin)`
+* 🔐 Improved cross-origin authentication support
+* 🧹 Refactored backend API routes for consistency
+* ⚙️ Preserved backward compatibility with the legacy `CORS_HEADERS` export
 
 ---
 
