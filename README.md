@@ -4,11 +4,11 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-![Version](https://img.shields.io/badge/version-v1.6.0-blue)
+![Version](https://img.shields.io/badge/version-v1.7.0-blue)
 
 Backend API for the Soundtrack Mood Explorer, a full-stack portfolio project for discovering and organizing movie soundtracks by mood.
 
-Responsible for:
+The backend provides:
 
 * Authentication (cookie-based JWT)
 * Soundtrack data storage
@@ -56,10 +56,10 @@ Cookie configuration:
 
 Authentication uses **httpOnly cookies**:
 
-* JWT stored in secure cookie
-* No localStorage usage
-* Cookie read using `cookies()` in API routes
-* All protected routes validate via cookie
+- JWT stored in a secure httpOnly cookie
+- Authentication handled via Next.js `cookies()`
+- No localStorage usage
+- Protected routes validate the authenticated user from the cookie
 
 ---
 
@@ -160,13 +160,16 @@ Safari applies stricter privacy rules to cross-site authentication cookies (Inte
 ## 🏗 Architecture
 
 ```text
-Frontend
+Client
+   │
+   ▼
+Next.js Frontend
    │
    ▼
 REST API
    │
    ▼
-Next.js Backend
+Authentication
    │
    ▼
 MongoDB Atlas
@@ -179,34 +182,18 @@ MongoDB Atlas
 Current version:
 
 ```
-v1.6.0
+v1.7.0
 ```
-
-### v1.6.0 Highlights
-
-* 🌍 Implemented dynamic CORS handling across all API routes
-* 🚀 Added support for Vercel Preview Deployments
-* 🔄 Standardized CORS implementation using `getCorsHeaders(origin)`
-* 🔐 Improved cross-origin authentication support
-* 🧹 Refactored backend API routes for consistency
-* ⚙️ Preserved backward compatibility with the legacy `CORS_HEADERS` export
 
 ---
 
-## 📦 Release History
+## ✨ Current Highlights
 
-### v1.6.0
-
-- 🌍 Dynamic CORS support
-- 🚀 Vercel Preview Deployment compatibility
-- 🔄 Unified CORS implementation across all API routes
-
-### v1.5.0
-
-- 🚀 Production deployment on Vercel
-- ☁️ MongoDB Atlas integration
-- 🔐 Production-ready authentication
-- 🌍 Centralized CORS configuration
+- 👤 Profile statistics API
+- 📅 Account creation date (`createdAt`) exposed via `/api/user/me`
+- 🔐 Secure authentication using httpOnly cookies
+- 🌍 Dynamic CORS with credential support
+- ⭐ User-specific favorites API
 
 ---
 
@@ -214,12 +201,35 @@ v1.6.0
 
 Future improvements include:
 
-- 🚦 Rate limiting
-- 📊 Request logging and monitoring
-- 🧪 Unit and integration testing
 - 🔄 Refresh token support
+- 🚦 Rate limiting
+- 📊 Request logging & monitoring
 - 📖 OpenAPI / Swagger documentation
 - 👤 Administrative endpoints
+- 🧪 Unit & integration testing
+
+---
+
+## 🗺 Roadmap
+
+### ✅ Completed
+
+- User authentication
+- Favorites API
+- Profile management
+- Account deletion
+- Password updates
+- Profile statistics support
+- User metadata endpoints
+- Secure cookie authentication
+
+### 🚧 Planned
+
+- Spotify OAuth
+- Playlist support
+- Admin dashboard
+- AI recommendations
+- Unit & integration testing
 
 ---
 
