@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint"
   },
-  "engines":{
+  "engines": {
     "node": ">=20 <21"
   },
   "dependencies": {
@@ -18,7 +18,8 @@
     "mongoose": "^8.21.1",
     "next": "^16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "resend": "^6.17.1"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.10",
