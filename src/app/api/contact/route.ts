@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
-
-import { getCorsHeaders } from "@/lib/cors";
 import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { getCorsHeaders } from "@/lib/cors";
 
 export async function OPTIONS(req: Request) {
   const origin = req.headers.get("origin");
@@ -18,6 +15,14 @@ export async function POST(req: Request) {
   const origin = req.headers.get("origin");
 
   try {
+    const apiKey = process.env.RESEND_API_KEY;
+
+    if (!apiKey) {
+      throw new Error("RESEND_API_KEY is not configured.");
+    }
+
+    const resend = new Resend(apiKey);
+
     const { name, email, subject, message } = await req.json();
 
     if (!name || !email || !subject || !message) {

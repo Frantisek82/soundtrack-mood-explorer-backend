@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "engines": {
-    "node": ">=20 <21"
+    "node": "24.x"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
