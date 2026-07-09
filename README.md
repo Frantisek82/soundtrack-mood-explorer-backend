@@ -67,12 +67,13 @@ Authentication uses **httpOnly cookies**:
 
 ## 🌐 Browser Compatibility
 
-Tested successfully with:
+Verified during development on:
 
-- Google Chrome
-- Microsoft Edge
-- Firefox
-- Safari (macOS/iOS)
+- Google Chrome (Linux)
+- Google Chrome (Windows)
+- Safari (iOS)
+
+The application is built using modern web standards and is expected to work in other current Chromium-based browsers, but only the browsers listed above have been verified.
 
 ### Note
 
