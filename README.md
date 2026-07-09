@@ -4,17 +4,18 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-![Version](https://img.shields.io/badge/version-v1.7.0-blue)
+![Version](https://img.shields.io/badge/version-v1.8.0-blue)
 
 Backend API for the Soundtrack Mood Explorer, a full-stack portfolio project for discovering and organizing movie soundtracks by mood.
 
 The backend provides:
 
-* Authentication (cookie-based JWT)
-* Soundtrack data storage
-* Favorites management
-* Database seeding
-* REST API endpoints
+- Authentication (cookie-based JWT)
+- Soundtrack data storage
+- Favorites management
+- Contact form email delivery
+- Database seeding
+- REST API endpoints
 
 ---
 
@@ -22,6 +23,7 @@ The backend provides:
 
 - 🔐 Secure authentication (httpOnly cookies)
 - ⭐ User-specific favorites (full CRUD)
+- 📨 Contact API with Resend email delivery
 - 🎵 Spotify preview support (`spotifyTrackId`)
 - 🌱 Development seed endpoint
 - 📦 MongoDB persistence
@@ -89,6 +91,28 @@ All endpoints are protected and require authentication.
 
 ---
 
+## 📨 Contact API
+
+The backend provides a contact endpoint used by the frontend Contact page.
+
+### Endpoint
+
+POST /api/contact
+
+The endpoint:
+
+- validates incoming request data
+- sends emails using Resend
+- returns appropriate HTTP status codes
+- supports CORS for the frontend application
+
+Environment variables required:
+
+- `RESEND_API_KEY`
+- `CONTACT_EMAIL`
+
+---
+
 ## 🛠 Tech Stack
 
 - Next.js (App Router API)
@@ -106,6 +130,8 @@ All endpoints are protected and require authentication.
 ```
 MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/soundtrack-explorer
 JWT_SECRET=your_super_secret_key
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxx
+CONTACT_EMAIL=your@email.com
 ```
 
 ---
@@ -182,13 +208,14 @@ MongoDB Atlas
 Current version:
 
 ```
-v1.7.0
+v1.8.0
 ```
 
 ---
 
 ## ✨ Current Highlights
 
+- 📨 Contact API with Resend email delivery
 - 👤 Profile statistics API
 - 📅 Account creation date (`createdAt`) exposed via `/api/user/me`
 - 🔐 Secure authentication using httpOnly cookies
@@ -216,6 +243,8 @@ Future improvements include:
 
 - User authentication
 - Favorites API
+- Contact API
+- Email delivery with Resend
 - Profile management
 - Account deletion
 - Password updates
