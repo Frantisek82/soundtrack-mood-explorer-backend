@@ -1,5 +1,4 @@
 import mongoose, { Schema, models } from "mongoose";
-import type { Soundtrack } from "@/types/soundtrack";
 
 const UserSchema = new Schema(
   {
