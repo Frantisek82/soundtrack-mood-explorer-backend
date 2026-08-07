@@ -48,13 +48,13 @@ export async function GET(req: Request) {
     const userId = await getUserIdFromCookies();
 
     const playlists = await Playlist.find({
-      userId: new mongoose.Types.ObjectId(userId),
+      userId,
     }).sort({ createdAt: -1 });
 
     return NextResponse.json(playlists, {
       headers: getCorsHeaders(origin),
     });
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof Error && error.message === "Unauthorized") {
       return NextResponse.json(
         { message: "Unauthorized" },
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
     const playlist = await Playlist.create({
       userId: new mongoose.Types.ObjectId(userId),
       name: name.trim(),
-      description: description?.trim() || "",
+      description: typeof description === "string" ? description.trim() : "",
       soundtracks: [],
     });
 
