@@ -64,7 +64,7 @@ export async function GET(
     const playlist = await Playlist.findOne({
       _id: id,
       userId,
-    });
+    }).populate("soundtracks");
 
     if (!playlist) {
       return NextResponse.json(
