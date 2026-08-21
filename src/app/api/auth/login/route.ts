@@ -26,7 +26,10 @@ export async function POST(req: Request) {
   try {
     await connectDB();
 
-    let { email, password } = await req.json();
+    const body = await req.json();
+
+    let email = body.email;
+    const password = body.password;
 
     // Normalize inputs
     email = email?.trim().toLowerCase();
@@ -81,14 +84,16 @@ export async function POST(req: Request) {
     );
 
     // PRODUCTION-GRADE COOKIE
+    const isProduction = process.env.NODE_ENV === "production";
+
     response.cookies.set({
       name: "token",
       value: token,
-      httpOnly: true, // not accessible from JS
-      secure: true, // HTTPS only in production
-      sameSite: "none",
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
       path: "/",
-      maxAge: 60 * 60 * 24, // 1 day
+      maxAge: 60 * 60 * 24,
     });
 
     return response;

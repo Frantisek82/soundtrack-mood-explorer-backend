@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
-import { getCorsHeaders  } from "@/lib/cors";
+import { getCorsHeaders } from "@/lib/cors";
 
 /**
  * Email validation regex
@@ -19,9 +19,12 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 export async function OPTIONS(req: Request) {
   const origin = req.headers.get("origin");
 
-  return NextResponse.json({}, {
-    headers: getCorsHeaders(origin),
-  });
+  return NextResponse.json(
+    {},
+    {
+      headers: getCorsHeaders(origin),
+    },
+  );
 }
 
 /**
@@ -32,7 +35,11 @@ export async function POST(req: Request) {
   try {
     await connectDB();
 
-    let { name, email, password } = await req.json();
+    const body = await req.json();
+
+    let name = body.name;
+    let email = body.email;
+    const password = body.password;
 
     // Normalize inputs
     name = name?.trim();
