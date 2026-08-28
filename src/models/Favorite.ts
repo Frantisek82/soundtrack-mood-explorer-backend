@@ -1,5 +1,4 @@
 import mongoose, { Schema, models } from "mongoose";
-import type { Soundtrack } from "@/types/soundtrack";
 
 const FavoriteSchema = new Schema(
   {
@@ -14,11 +13,10 @@ const FavoriteSchema = new Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Prevent duplicates
 FavoriteSchema.index({ userId: 1, soundtrackId: 1 }, { unique: true });
 
-export default models.Favorite ||
-  mongoose.model("Favorite", FavoriteSchema);
+export default models.Favorite || mongoose.model("Favorite", FavoriteSchema);
