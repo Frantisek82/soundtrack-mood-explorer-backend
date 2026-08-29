@@ -4,7 +4,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-![Version](https://img.shields.io/badge/version-v1.8.0-blue)
+![Version](https://img.shields.io/badge/version-v2.1.0-blue)
 
 Backend API for the Soundtrack Mood Explorer, a full-stack portfolio project for discovering and organizing movie soundtracks by mood.
 
@@ -13,6 +13,7 @@ The backend provides:
 - Authentication (cookie-based JWT)
 - Soundtrack data storage
 - Favorites management
+- Custom playlist management
 - Contact form email delivery
 - Database seeding
 - REST API endpoints
@@ -25,6 +26,8 @@ The backend provides:
 - ⭐ User-specific favorites (full CRUD)
 - 📨 Contact API with Resend email delivery
 - 🎵 Spotify preview support (`spotifyTrackId`)
+- 🎼 User-specific custom playlists (full CRUD)
+- 🎵 Playlist soundtrack management
 - 🌱 Development seed endpoint
 - 📦 MongoDB persistence
 - 🌍 Dynamic CORS support
@@ -83,12 +86,37 @@ Safari's Intelligent Tracking Prevention (ITP) applies stricter rules to cross-s
 
 ## ⭐ Favorites API
 
-* `GET /api/favorites` → list user favorites
-* `POST /api/favorites` → add favorite
-* `DELETE /api/favorites/:id` → remove favorite
-* `GET /api/favorites/:id` → check favorite status
+- `GET /api/favorites` → list user favorites
+- `POST /api/favorites` → add favorite
+- `DELETE /api/favorites/:id` → remove favorite
+- `GET /api/favorites/:id` → check favorite status
 
 All endpoints are protected and require authentication.
+
+---
+
+## 🎼 Custom Playlists API (v2.1.0)
+
+The Custom Playlists API allows authenticated users to organize soundtracks into persistent personalized collections.
+
+### Playlist endpoints
+
+- `GET /api/playlists` → list the authenticated user's playlists
+- `POST /api/playlists` → create a playlist
+- `GET /api/playlists/:id` → retrieve a playlist with soundtrack details
+- `PATCH /api/playlists/:id` → rename a playlist or update its description
+- `DELETE /api/playlists/:id` → delete a playlist
+- `POST /api/playlists/:id/soundtracks` → add a soundtrack
+- `DELETE /api/playlists/:id/soundtracks/:soundtrackId` → remove a soundtrack
+
+Playlist operations:
+
+- Require authentication
+- Restrict access to the playlist owner
+- Validate playlist and soundtrack identifiers
+- Prevent duplicate soundtrack additions
+- Populate soundtrack details when retrieving a playlist
+- Persist playlist data in MongoDB
 
 ---
 
@@ -98,7 +126,7 @@ The backend provides a contact endpoint used by the frontend Contact page.
 
 ### Endpoint
 
-POST /api/contact
+`POST /api/contact`
 
 The endpoint:
 
@@ -166,11 +194,11 @@ The backend uses dynamic CORS handling through the `getCorsHeaders(origin)` help
 
 Supported environments:
 
-* Local development (`http://localhost:3001`)
-* Vercel Production
-* Vercel Preview Deployments
+- Local development (`http://localhost:3001`)
+- Vercel Production
+- Vercel Preview Deployments
 
-All API routes use the same dynamic CORS strategy, allowing requests from approved frontend origins while supporting secure authentication using httpOnly cookies.
+Frontend-facing API routes use the same dynamic CORS strategy, allowing requests from approved frontend origins while supporting secure authentication using httpOnly cookies.
 
 ### Credentials
 
@@ -209,13 +237,19 @@ MongoDB Atlas
 Current version:
 
 ```
-v1.8.0
+v2.1.0
 ```
+
+Release notes: [v2.1.0 – Custom Playlists API](https://github.com/Frantisek82/soundtrack-mood-explorer-backend/releases/tag/v2.1.0)
 
 ---
 
-## ✨ Current Highlights
+## ✨ v2.1.0 Highlights
 
+- 🎼 Persistent custom playlist API
+- 🎵 Playlist soundtrack management
+- 👤 User-specific playlist ownership
+- 🚫 Duplicate soundtrack prevention
 - 📨 Contact API with Resend email delivery
 - 👤 Profile statistics API
 - 📅 Account creation date (`createdAt`) exposed via `/api/user/me`
@@ -252,11 +286,15 @@ Future improvements include:
 - Profile statistics support
 - User metadata endpoints
 - Secure cookie authentication
+- Custom playlist data model
+- Playlist CRUD API
+- Playlist soundtrack management
+- User-specific playlist ownership
+- Playlist integration with the frontend
 
 ### 🚧 Planned
 
 - Spotify OAuth
-- Playlist support
 - Admin dashboard
 - AI recommendations
 - Unit & integration testing
