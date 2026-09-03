@@ -55,7 +55,7 @@ export async function GET(req: Request) {
     return NextResponse.json(soundtracks, {
       headers: getCorsHeaders(origin),
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { message: "Unauthorized" },
       {
@@ -88,8 +88,11 @@ export async function POST(req: Request) {
       status: 201,
       headers: getCorsHeaders(origin),
     });
-  } catch (error: any) {
-    if (error.code === 11000) {
+  } catch (error: unknown) {
+    if (
+      error instanceof mongoose.mongo.MongoServerError &&
+      error.code === 11000
+  ) {
       return NextResponse.json(
         { message: "Already in favorites" },
         {
