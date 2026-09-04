@@ -35,3 +35,6 @@ jobs:
 
       - name: Build application
         run: npm run build
+        env:
+          MONGODB_URI: mongodb://127.0.0.1:27017/soundtrack-mood-explorer-ci
+          JWT_SECRET: ci-build-placeholder
