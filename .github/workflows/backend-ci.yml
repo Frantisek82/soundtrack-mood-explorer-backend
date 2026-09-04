@@ -1,0 +1,37 @@
+name: Backend CI
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - "feat/**"
+
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  build-and-lint:
+    name: Build and Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Build application
+        run: npm run build
