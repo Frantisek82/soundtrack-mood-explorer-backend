@@ -38,7 +38,7 @@ export async function GET(
     return NextResponse.json(soundtrack, {
       headers: getCorsHeaders(origin),
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { message: "Invalid soundtrack ID" },
       {
