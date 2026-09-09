@@ -4,7 +4,8 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-![Version](https://img.shields.io/badge/version-v2.1.0-blue)
+![Version](https://img.shields.io/badge/version-v2.1.1-blue)
+[![Backend CI](https://github.com/Frantisek82/soundtrack-mood-explorer-backend/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/Frantisek82/soundtrack-mood-explorer-backend/actions/workflows/backend-ci.yml)
 
 Backend API for the Soundtrack Mood Explorer, a full-stack portfolio project for discovering and organizing movie soundtracks by mood.
 
@@ -151,6 +152,7 @@ Environment variables required:
 - Mongoose
 - JSON Web Tokens (JWT)
 - Vercel
+- GitHub Actions
 
 ---
 
@@ -177,6 +179,23 @@ Runs at:
 ```
 http://localhost:3000
 ```
+
+---
+
+## 🔄 Continuous Integration
+
+This project uses **GitHub Actions** for Continuous Integration.
+
+On every push and pull request, the workflow automatically:
+
+- Installs project dependencies using `npm ci`
+- Runs ESLint validation with `npm run lint`
+- Runs standalone TypeScript validation with `npx tsc --noEmit`
+- Builds the production application with `npm run build`
+
+The CI build uses non-production placeholder values for `MONGODB_URI` and `JWT_SECRET`. These values are used only to provide the environment-variable presence required during build validation; they are not production credentials and are not used for deployment.
+
+No automated backend test script is currently configured.
 
 ---
 
@@ -236,11 +255,23 @@ MongoDB Atlas
 
 Current version:
 
-```
-v2.1.0
+```text
+v2.1.1
 ```
 
-Release notes: [v2.1.0 – Custom Playlists API](https://github.com/Frantisek82/soundtrack-mood-explorer-backend/releases/tag/v2.1.0)
+Release notes: [v2.1.1 – Maintenance & Hardening](https://github.com/Frantisek82/soundtrack-mood-explorer-backend/releases/tag/v2.1.1)
+
+---
+
+## ✨ v2.1.1 Highlights
+
+- 🧹 Resolved backend ESLint findings without suppressions
+- ✅ Added backend ESLint validation to GitHub Actions
+- 🔎 Added standalone TypeScript validation to the CI workflow
+- 🚀 Added automated production-build validation
+- 🔐 Configured non-production build-only CI placeholders for required environment variables
+- 🧪 Confirmed that no automated backend test script is currently configured
+- 🔒 Maintenance-only release with no new user-facing features
 
 ---
 
