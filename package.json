@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "engines": {
     "node": "24.x"
@@ -23,12 +25,14 @@
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^20",
+    "@types/node": "^24.13.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.4",
-    "typescript": "^5"
+    "mongodb-memory-server": "^11.2.0",
+    "typescript": "^5",
+    "vitest": "^5.0.0"
   }
 }
