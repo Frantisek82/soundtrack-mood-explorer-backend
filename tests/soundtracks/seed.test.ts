@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-
+import { soundtrackCatalogue } from "@/data/soundtrack-catalogue";
 import { POST } from "@/app/api/seed/route";
 import * as database from "@/lib/db";
 import Favorite from "@/models/Favorite";
@@ -25,6 +25,23 @@ const catalogue = [
 ];
 
 describe("POST /api/seed", () => {
+  it("contains 100 unique tracks and preserves the original seed fields", () => {
+    expect(soundtrackCatalogue).toHaveLength(100);
+    expect(soundtrackCatalogue.slice(0, 2)).toEqual(catalogue);
+
+    expect(
+      new Set(soundtrackCatalogue.map((entry) => entry.spotifyTrackId)).size,
+    ).toBe(100);
+
+    expect(
+      new Set(
+        soundtrackCatalogue.map((entry) =>
+          JSON.stringify([entry.title, entry.movie, entry.composer]),
+        ),
+      ).size,
+    ).toBe(100);
+  });
+
   it("rejects production requests before connecting to the database", async () => {
     const existing = await Soundtrack.create(catalogue[0]);
     const connectSpy = vi.spyOn(database, "connectDB");
@@ -60,10 +77,10 @@ describe("POST /api/seed", () => {
 
     const stored = await Soundtrack.find().lean();
 
-    expect(stored).toHaveLength(2);
+    expect(stored).toHaveLength(100);
     expect(stored).toEqual(
       expect.arrayContaining(
-        catalogue.map((entry) => expect.objectContaining(entry)),
+        soundtrackCatalogue.map((entry) => expect.objectContaining(entry)),
       ),
     );
   });
@@ -94,7 +111,7 @@ describe("POST /api/seed", () => {
 
     await POST();
 
-    await expect(Soundtrack.countDocuments()).resolves.toBe(3);
+    await expect(Soundtrack.countDocuments()).resolves.toBe(101);
     await expect(Soundtrack.findById(existing._id).lean()).resolves.toEqual(
       existing.toObject(),
     );
@@ -116,7 +133,7 @@ describe("POST /api/seed", () => {
       await POST();
       await POST();
 
-      await expect(Soundtrack.countDocuments()).resolves.toBe(2);
+      await expect(Soundtrack.countDocuments()).resolves.toBe(100);
       await expect(Soundtrack.findById(existing._id).lean()).resolves.toEqual(
         existing.toObject(),
       );
