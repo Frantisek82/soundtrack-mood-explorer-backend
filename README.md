@@ -4,7 +4,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-![Version](https://img.shields.io/badge/version-v2.1.1-blue)
+![Version](https://img.shields.io/badge/version-v2.1.2-blue)
 [![Backend CI](https://github.com/Frantisek82/soundtrack-mood-explorer-backend/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/Frantisek82/soundtrack-mood-explorer-backend/actions/workflows/backend-ci.yml)
 
 Backend API for the Soundtrack Mood Explorer, a full-stack portfolio project for discovering and organizing movie soundtracks by mood.
@@ -459,16 +459,16 @@ The Next.js frontend calls the backend's App Router API endpoints. Protected rou
 Latest published release:
 
 ```text
-v2.1.1
+v2.1.2
 ```
 
-Release notes: [v2.1.1 – Maintenance & Hardening](https://github.com/Frantisek82/soundtrack-mood-explorer-backend/releases/tag/v2.1.1)
+Release notes: [v2.1.2 – Backend Testing Foundation](https://github.com/Frantisek82/soundtrack-mood-explorer-backend/releases/tag/v2.1.2)
 
-The `dev` branch contains ongoing v2.1.2 work. The documentation and testing additions described above do not indicate that v2.1.2 has been tagged or published.
+Published from commit `cbac3f8`. Production deployment, API health, the 100-track soundtrack response, and deployed frontend workflows were verified.
 
 ---
 
-## 🚧 v2.1.2 Development Highlights
+## ✨ v2.1.2 Highlights
 
 - Backend testing foundation using Vitest
 - Ephemeral MongoDB testing with strict database safety guards
@@ -479,8 +479,13 @@ The `dev` branch contains ongoing v2.1.2 work. The documentation and testing add
 - Additive seeding that preserves existing soundtrack records and references
 - Curated catalogue expanded to 100 soundtrack entries
 - Application-database population and preservation verification completed separately from automated tests
+- Next.js and ESLint configuration updated to 16.3.6
+- 24 test files and 142 tests passed
+- Production dependency audit reported zero vulnerabilities during release validation
 
-Release validation and publication remain separate follow-up work.
+Release validation and publication are complete. No reseeding or database migration is required for this release.
+
+The full dependency audit retained five high findings in the ESLint development dependency chain, originating from `braces` (GHSA-vfj7-8cjw-p6xm). No patched version was listed during release review; these findings remain tracked for follow-up.
 
 ---
 
@@ -550,14 +555,15 @@ Future improvements include:
 - Additive soundtrack seeding with preservation coverage
 - Curated 100-track soundtrack catalogue
 - Verified application-database catalogue population
+- v2.1.2 release validation and publication
 
 ### 🚧 Planned
 
-- Complete v2.1.2 documentation, release validation, and publication
 - Spotify OAuth
 - Admin dashboard
 - AI recommendations
 - Broader frontend/backend integration and end-to-end testing
+- Resolve remaining ESLint development dependency audit findings when an upstream fix is available
 
 ---
 
