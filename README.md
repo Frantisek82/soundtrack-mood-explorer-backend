@@ -11,28 +11,30 @@ Backend API for the Soundtrack Mood Explorer, a full-stack portfolio project for
 
 The backend provides:
 
-- Authentication (cookie-based JWT)
+- Authentication using cookie-based JWTs
 - Soundtrack data storage
 - Favorites management
 - Custom playlist management
 - Contact form email delivery
-- Database seeding
+- Additive soundtrack seeding
 - REST API endpoints
 
 ---
 
 ## 🚀 Features
 
-- 🔐 Secure authentication (httpOnly cookies)
-- ⭐ User-specific favorites (full CRUD)
+- 🔐 Secure authentication using httpOnly cookies
+- ⭐ User-specific favorites
 - 📨 Contact API with Resend email delivery
-- 🎵 Spotify preview support (`spotifyTrackId`)
-- 🎼 User-specific custom playlists (full CRUD)
+- 🎵 Spotify track references through `spotifyTrackId`
+- 🎼 User-specific custom playlists
 - 🎵 Playlist soundtrack management
-- 🌱 Development seed endpoint
+- 🌱 Additive development seed endpoint
+- 🎶 Curated catalogue of 100 soundtrack entries
 - 📦 MongoDB persistence
 - 🌍 Dynamic CORS support
 - 🧱 RESTful API design
+- 🧪 Automated backend testing with isolated MongoDB persistence
 
 ---
 
@@ -41,9 +43,9 @@ The backend provides:
 - Backend: Vercel
 - Database: MongoDB Atlas
 
-Authentication uses secure httpOnly cookies with cross-origin support.
+Production authentication uses secure httpOnly cookies with cross-origin support.
 
-Cookie configuration:
+Production cookie configuration:
 
 - Secure
 - HttpOnly
@@ -62,7 +64,7 @@ Cookie configuration:
 
 Authentication uses **httpOnly cookies**:
 
-- JWT stored in a secure httpOnly cookie
+- JWT stored in an httpOnly cookie
 - Authentication handled via Next.js `cookies()`
 - No localStorage usage
 - Protected routes validate the authenticated user from the cookie
@@ -93,6 +95,8 @@ Safari's Intelligent Tracking Prevention (ITP) applies stricter rules to cross-s
 - `GET /api/favorites/:id` → check favorite status
 
 All endpoints are protected and require authentication.
+
+For the routes containing `:id`, the identifier refers to the soundtrack, not the Favorite persistence record.
 
 ---
 
@@ -131,10 +135,10 @@ The backend provides a contact endpoint used by the frontend Contact page.
 
 The endpoint:
 
-- validates incoming request data
-- sends emails using Resend
-- returns appropriate HTTP status codes
-- supports CORS for the frontend application
+- Validates incoming request data
+- Sends emails using Resend
+- Returns appropriate HTTP status codes
+- Supports CORS for the frontend application
 
 Environment variables required:
 
@@ -146,11 +150,13 @@ Environment variables required:
 ## 🛠 Tech Stack
 
 - Next.js (App Router API)
-- Node.js
+- Node.js 24.x
 - TypeScript
 - MongoDB Atlas
 - Mongoose
 - JSON Web Tokens (JWT)
+- Vitest
+- mongodb-memory-server
 - Vercel
 - GitHub Actions
 
@@ -158,52 +164,263 @@ Environment variables required:
 
 ## ⚙️ Environment Variables
 
-```
+Configure application environment variables locally or through the deployment platform:
+
+```dotenv
 MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/soundtrack-explorer
-JWT_SECRET=your_super_secret_key
-RESEND_API_KEY=re_xxxxxxxxxxxxxxxxx
+JWT_SECRET=replace-with-a-private-secret
+RESEND_API_KEY=re_replace_with_your_key
 CONTACT_EMAIL=your@email.com
 ```
+
+These are examples, not working credentials.
+
+`MONGODB_URI` determines the actual database target. A local development server can connect to a deployed application database if configured with its connection string.
+
+Keep real credentials and local environment files outside Git.
+
+Automated tests supply their own ephemeral database URI and test-only JWT secret. They do not require production credentials.
 
 ---
 
 ## ▶️ Running the Backend
 
+Use Node.js 24.x.
+
+Install the locked dependencies and start the development server:
+
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Runs at:
+The development server normally runs at:
 
-```
+```text
 http://localhost:3000
 ```
+
+Confirm the port shown in the terminal before sending local API requests.
+
+---
+
+## 🧪 Backend Testing
+
+The backend uses Vitest and mongodb-memory-server to test existing API behavior against an isolated, ephemeral MongoDB database.
+
+### Commands
+
+Run the complete test suite:
+
+```bash
+npm test
+```
+
+Run tests in watch mode during development:
+
+```bash
+npm run test:watch
+```
+
+Run standalone TypeScript and ESLint validation:
+
+```bash
+npx tsc --noEmit
+npm run lint
+```
+
+### Test configuration
+
+The configuration is maintained in `vitest.config.mts`.
+
+It uses:
+
+- The Node.js test environment
+- Test files matching `tests/**/*.test.ts`
+- TypeScript path-alias resolution
+- Global setup in `tests/global-setup.ts`
+- Per-file setup in `tests/setup.ts`
+- Sequential test-file execution
+- 120-second hook and test timeouts
+
+### Test coverage
+
+Automated coverage includes:
+
+- Health and database smoke tests
+- Authentication and authorization
+- Favorites API behavior and user isolation
+- Playlist API behavior and ownership restrictions
+- CORS preflight requests and response headers
+- Authentication cookie behavior
+- Validation and error responses
+- Additive soundtrack seeding and catalogue validation
+
+Route tests invoke handlers directly. Database-backed tests use real Mongoose persistence in the isolated test database. Authentication tests use real JWT and bcrypt behavior, with narrow mocking of the Next.js cookie-reading boundary where needed.
+
+These tests characterize current backend behavior. They do not replace browser-based or deployed frontend/backend validation.
+
+### Isolated database lifecycle
+
+Global setup starts an ephemeral MongoDB instance and provides a URI for the exact database name:
+
+```text
+soundtrack-mood-explorer-test
+```
+
+The test setup sets:
+
+- `NODE_ENV=test`
+- `MONGODB_URI` to the generated ephemeral database URI
+- `JWT_SECRET` to a test-only value
+
+No application `.env` credentials are required for test execution.
+
+Test setup connects before each test file, clears records before each test, and disconnects after each file. Global teardown stops the ephemeral MongoDB instance after the run.
+
+### Database safety guards
+
+The safety helpers are maintained in `tests/helpers/database.ts`.
+
+They:
+
+- Require `NODE_ENV=test` for both test-database connection and cleanup
+- Allow only loopback hosts: `127.0.0.1`, `localhost`, and `::1`
+- Require the `mongodb:` protocol
+- Require the exact database name `soundtrack-mood-explorer-test`
+- Reject MongoDB SRV connection strings
+- Reject remote hosts and incorrectly named databases
+- Verify the active Mongoose connection before cleanup
+
+Cleanup deletes test records from the verified isolated database. On disconnect, the helper resets the application's cached Mongoose connection.
+
+Automated tests must not use production credentials or connect to a persistent application database. Do not relax the guards to run tests against MongoDB Atlas or another persistent database.
 
 ---
 
 ## 🔄 Continuous Integration
 
-This project uses **GitHub Actions** for Continuous Integration.
+The backend workflow is maintained in `.github/workflows/backend-ci.yml`.
 
-On every push and pull request, the workflow automatically:
+It runs on:
 
-- Installs project dependencies using `npm ci`
-- Runs ESLint validation with `npm run lint`
-- Runs standalone TypeScript validation with `npx tsc --noEmit`
-- Builds the production application with `npm run build`
+- Pushes to `main`
+- Pushes to `dev`
+- Pushes to branches matching `feat/**`
+- Pull requests targeting `main` or `dev`
 
-The CI build uses non-production placeholder values for `MONGODB_URI` and `JWT_SECRET`. These values are used only to provide the environment-variable presence required during build validation; they are not production credentials and are not used for deployment.
+A `docs/**` branch is validated when its pull request is opened against `dev` or `main`.
 
-No automated backend test script is currently configured.
+The workflow uses Node.js 24 and performs:
+
+1. Dependency installation with `npm ci`
+2. ESLint validation with `npm run lint`
+3. Automated backend tests with `npm test`
+4. Production-build validation with `npm run build`
+
+Automated tests use the isolated ephemeral database.
+
+The build step receives non-production placeholders:
+
+```dotenv
+MONGODB_URI=mongodb://127.0.0.1:27017/soundtrack-mood-explorer-ci
+JWT_SECRET=ci-build-placeholder
+```
+
+These values provide the required environment-variable presence during build validation. They are not production credentials or deployment configuration.
+
+The current workflow does not run a separate `npx tsc --noEmit` step. Standalone TypeScript validation is performed locally as a separate check.
 
 ---
 
 ## 🌱 Database Seeding
 
-```js
-fetch("http://localhost:3000/api/seed", { method: "POST" })
+The curated seed catalogue contains 100 soundtrack entries and is maintained in:
+
+- `src/data/soundtrack-catalogue.ts`
+- [Catalogue curation notes](docs/soundtrack-catalogue-curation.md)
+
+The curation notes document recording selections, composer credits, durations, and edition-specific considerations.
+
+The development seed endpoint is:
+
+```text
+POST /api/seed
 ```
+
+### Additive behavior
+
+Seeding matches existing soundtracks using the exact combination of:
+
+- `title`
+- `movie`
+- `composer`
+
+Only missing catalogue identities are inserted. Existing matching records are preserved, including their stored fields, IDs, and timestamps. Existing Favorites and Playlist references remain attached to the original soundtrack records.
+
+Seeding does not update existing records to match later catalogue edits. It does not delete unrelated soundtracks or repair existing duplicate records.
+
+Changing a catalogue identity field can cause that entry to be treated as a new identity.
+
+### Guarantees and limitations
+
+- Requests are rejected with `403 Forbidden` when `NODE_ENV=production`, before connecting to the database.
+- Sequential reruns skip catalogue identities already present.
+- Duplicate prevention is not guaranteed for concurrent seed requests.
+- Send one seed request at a time.
+- Existing duplicates require separate investigation; seeding does not reconcile them.
+- The success response is `{"message":"Database seeded"}`; it does not report how many records were inserted.
+
+The endpoint checks for an existing identity before inserting it. That check and insertion are separate operations, so concurrent requests can both find an identity missing and create duplicate records.
+
+The catalogue contains 100 identities, but a database may contain additional soundtracks or pre-existing duplicates. A total record count alone does not establish catalogue completeness or uniqueness.
+
+### Identify the actual database target
+
+The database target is determined by the running application's `MONGODB_URI`.
+
+A local development server can connect to the deployed application database if its configuration points there. Calling `localhost` does not mean the database is local.
+
+Before seeding, privately confirm the intended database host and database name. Keep credentials and connection strings out of terminal output, screenshots, issues, and pull requests.
+
+### Safe manual procedure
+
+Manual seeding against a persistent application database is separate from automated test execution.
+
+1. Confirm the intended database target.
+2. Take a private snapshot of existing soundtracks, users, Favorites, and Playlists.
+3. Record the existing catalogue identities and references.
+4. Start the backend in development mode using the intended configuration.
+5. Send one seed request and inspect its response.
+6. Verify that every catalogue identity exists exactly once.
+7. Compare existing records and references against the private snapshot.
+8. Confirm the soundtrack API and relevant frontend workflows still behave correctly.
+
+After completing the target and snapshot checks, send the request to the confirmed local development port:
+
+```bash
+curl --fail --silent --show-error --max-time 30 \
+  -X POST http://localhost:3000/api/seed
+```
+
+If the request fails or times out, inspect the database before deciding whether to retry. Some inserts may already have completed.
+
+The seed operation does not provide an automatic rollback. Keep the private snapshot available for recovery planning.
+
+Keep credentials, user data, snapshots, and backups outside Git. Do not attach them to documentation or pull requests.
+
+### Completed v2.1.2 population
+
+The application database was populated and verified separately from automated tests:
+
+- 98 soundtracks were added.
+- All 100 catalogue identities were present exactly once.
+- Both original soundtrack records were unchanged.
+- 12 users, 7 Favorites, and 10 Playlists were unchanged against a private snapshot.
+- The deployed soundtrack API returned 100 tracks.
+- Frontend checks passed.
+
+This records the completed operation; it is not an instruction to repeat it.
 
 ---
 
@@ -217,43 +434,29 @@ Supported environments:
 - Vercel Production
 - Vercel Preview Deployments
 
-Frontend-facing API routes use the same dynamic CORS strategy, allowing requests from approved frontend origins while supporting secure authentication using httpOnly cookies.
+Frontend-facing API routes use the same dynamic CORS strategy, allowing requests from approved frontend origins while supporting authentication using httpOnly cookies.
 
 ### Credentials
 
-```
+```text
 Access-Control-Allow-Credentials: true
 ```
 
 ### Known limitation
 
-Safari applies stricter privacy rules to cross-site authentication cookies (Intelligent Tracking Prevention). On some iOS/macOS Safari configurations, users may need to adjust browser privacy settings for cross-site authentication.
+Safari applies stricter privacy rules to cross-site authentication cookies through Intelligent Tracking Prevention. On some iOS/macOS Safari configurations, users may need to adjust browser privacy settings for cross-site authentication.
 
 ---
 
 ## 🏗 Architecture
 
-```text
-Client
-   │
-   ▼
-Next.js Frontend
-   │
-   ▼
-REST API
-   │
-   ▼
-Authentication
-   │
-   ▼
-MongoDB Atlas
-```
+The Next.js frontend calls the backend's App Router API endpoints. Protected routes validate cookie-based authentication and apply user or playlist ownership restrictions before accessing MongoDB through Mongoose.
 
 ---
 
 ## 🏷 Version
 
-Current version:
+Latest published release:
 
 ```text
 v2.1.1
@@ -261,16 +464,33 @@ v2.1.1
 
 Release notes: [v2.1.1 – Maintenance & Hardening](https://github.com/Frantisek82/soundtrack-mood-explorer-backend/releases/tag/v2.1.1)
 
+The `dev` branch contains ongoing v2.1.2 work. The documentation and testing additions described above do not indicate that v2.1.2 has been tagged or published.
+
+---
+
+## 🚧 v2.1.2 Development Highlights
+
+- Backend testing foundation using Vitest
+- Ephemeral MongoDB testing with strict database safety guards
+- Authentication and authorization test coverage
+- Favorites and Playlist API coverage
+- CORS, cookie, validation, and error-response coverage
+- Automated backend tests in GitHub Actions
+- Additive seeding that preserves existing soundtrack records and references
+- Curated catalogue expanded to 100 soundtrack entries
+- Application-database population and preservation verification completed separately from automated tests
+
+Release validation and publication remain separate follow-up work.
+
 ---
 
 ## ✨ v2.1.1 Highlights
 
 - 🧹 Resolved backend ESLint findings without suppressions
 - ✅ Added backend ESLint validation to GitHub Actions
-- 🔎 Added standalone TypeScript validation to the CI workflow
 - 🚀 Added automated production-build validation
 - 🔐 Configured non-production build-only CI placeholders for required environment variables
-- 🧪 Confirmed that no automated backend test script is currently configured
+- 🧪 Confirmed that no automated backend test script was configured at the time of the v2.1.1 release
 - 🔒 Maintenance-only release with no new user-facing features
 
 ---
@@ -296,10 +516,10 @@ Future improvements include:
 
 - 🔄 Refresh token support
 - 🚦 Rate limiting
-- 📊 Request logging & monitoring
+- 📊 Request logging and monitoring
 - 📖 OpenAPI / Swagger documentation
 - 👤 Administrative endpoints
-- 🧪 Unit & integration testing
+- 🧪 Broader frontend/backend integration and end-to-end testing
 
 ---
 
@@ -322,26 +542,38 @@ Future improvements include:
 - Playlist soundtrack management
 - User-specific playlist ownership
 - Playlist integration with the frontend
+- Backend testing foundation with Vitest
+- Isolated ephemeral MongoDB testing and database safety guards
+- Authentication, Favorites, and Playlist API test coverage
+- CORS, cookie, validation, and error-response test coverage
+- Automated backend test execution in GitHub Actions
+- Additive soundtrack seeding with preservation coverage
+- Curated 100-track soundtrack catalogue
+- Verified application-database catalogue population
 
 ### 🚧 Planned
 
+- Complete v2.1.2 documentation, release validation, and publication
 - Spotify OAuth
 - Admin dashboard
 - AI recommendations
-- Unit & integration testing
+- Broader frontend/backend integration and end-to-end testing
 
 ---
 
 ## 📋 Project Management
 
-Development is managed using GitHub Issues and feature branches.
+Development is managed using GitHub Issues and focused branches for:
 
 - Feature requests
 - Bug reports
-- Roadmap
+- Testing
+- Documentation
 - Release planning
 
-Project planning is maintained in the frontend repository, while this repository focuses on backend implementation.
+The project roadmap is maintained in the frontend repository. Backend implementation, testing, and documentation issues are tracked in this repository.
+
+Changes are reviewed through pull requests into `dev`. Release validation precedes the release pull request from `dev` into `main`.
 
 ---
 
