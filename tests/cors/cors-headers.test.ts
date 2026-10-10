@@ -5,6 +5,7 @@ import { getCorsHeaders } from "@/lib/cors";
 describe("getCorsHeaders", () => {
   it.each([
     "http://localhost:3001",
+    "http://127.0.0.1:3001",
     "https://soundtrack-mood-explorer-frontend.vercel.app",
     "https://soundtrack-mood-explorer-frontend-git-feature.vercel.app",
   ])("allows the frontend origin %s", (origin) => {
@@ -26,6 +27,7 @@ describe("getCorsHeaders", () => {
       "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
       "Access-Control-Allow-Credentials": "true",
+      Vary: "Origin",
     });
   });
 });

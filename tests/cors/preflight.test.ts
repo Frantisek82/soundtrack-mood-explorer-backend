@@ -25,6 +25,7 @@ function expectCorsHeaders(response: Response) {
     "Content-Type, Authorization",
   );
   expect(response.headers.get("Access-Control-Allow-Credentials")).toBe("true");
+  expect(response.headers.get("Vary")).toBe("Origin");
 }
 
 describe("CORS preflight responses", () => {
