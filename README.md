@@ -162,6 +162,14 @@ Environment variables required:
 
 ---
 
+## Spotify OAuth configuration foundation
+
+The configuration, request-security, and transaction-cookie helpers are available. OAuth routes and frontend controls follow in later issues.
+
+See [Spotify configuration](docs/spotify-configuration.md) and [OAuth architecture](docs/spotify-oauth-plan.md).
+
+---
+
 ## ⚙️ Environment Variables
 
 Configure application environment variables locally or through the deployment platform:
