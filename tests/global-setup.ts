@@ -1,4 +1,4 @@
-import { MongoMemoryServer } from "mongodb-memory-server";
+import { MongoMemoryReplSet } from "mongodb-memory-server";
 import type { TestProject } from "vitest/node";
 
 declare module "vitest" {
@@ -8,10 +8,22 @@ declare module "vitest" {
 }
 
 export default async function globalSetup(project: TestProject) {
-  const mongoServer = await MongoMemoryServer.create();
-  const mongoUri = mongoServer.getUri("soundtrack-mood-explorer-test");
+  const mongoServer = await MongoMemoryReplSet.create({
+    replSet: {
+      count: 1,
+      storageEngine: "wiredTiger",
+    },
+  });
 
-  project.provide("mongoUri", mongoUri);
+  try {
+    project.provide(
+      "mongoUri",
+      mongoServer.getUri("soundtrack-mood-explorer-test"),
+    );
+  } catch (error) {
+    await mongoServer.stop();
+    throw error;
+  }
 
   return async () => {
     await mongoServer.stop();
