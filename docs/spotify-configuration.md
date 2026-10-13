@@ -2,8 +2,9 @@
 
 This document covers the helpers introduced in issue #35.
 
-OAuth routes, token storage, and frontend controls are implemented in later
-issues. Setting SPOTIFY_ENABLED does not by itself provide a working integration.
+OAuth routes and frontend controls follow in later issues. The encrypted
+persistence foundation is described in [Spotify persistence](spotify-persistence.md).
+Setting SPOTIFY_ENABLED does not by itself provide a working integration.
 
 Architecture: [Spotify OAuth plan](spotify-oauth-plan.md).
 
@@ -31,7 +32,9 @@ screenshots, issues, or pull requests. The configuration object contains key
 material and must remain backend-only.
 
 Key IDs use 1–64 letters, digits, underscores, or hyphens.
-Encryption and operational key rotation are implemented in issue #36.
+Encryption helpers and the key rotation/retirement procedure are documented
+in [Spotify persistence](spotify-persistence.md). A bulk rotation command is not
+provided by this foundation.
 
 ## Local development
 

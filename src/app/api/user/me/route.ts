@@ -50,7 +50,9 @@ export async function GET(req: Request) {
 
     const userId = await getUserIdFromCookies();
 
-    const user = await User.findById(userId).select("-password");
+    const user = await User.findById(userId).select(
+      "_id name email createdAt updatedAt __v",
+    );
 
     if (!user) {
       return NextResponse.json(
@@ -59,9 +61,17 @@ export async function GET(req: Request) {
       );
     }
 
-    return NextResponse.json(user, {
-      headers: getCorsHeaders(origin),
-    });
+    return NextResponse.json(
+      {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        __v: user.__v,
+      },
+      { headers: getCorsHeaders(origin) },
+    );
   } catch {
     return NextResponse.json(
       { message: "Unauthorized" },

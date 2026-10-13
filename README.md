@@ -162,11 +162,11 @@ Environment variables required:
 
 ---
 
-## Spotify OAuth configuration foundation
+## Spotify OAuth foundation
 
-The configuration, request-security, and transaction-cookie helpers are available. OAuth routes and frontend controls follow in later issues.
+Configuration, request-security, transaction-cookie, encrypted persistence, and generation-coordination helpers are available. OAuth routes and frontend controls follow in later issues.
 
-See [Spotify configuration](docs/spotify-configuration.md) and [OAuth architecture](docs/spotify-oauth-plan.md).
+See [Spotify configuration](docs/spotify-configuration.md), [encrypted persistence](docs/spotify-persistence.md), and [OAuth architecture](docs/spotify-oauth-plan.md).
 
 ---
 
@@ -270,7 +270,7 @@ These tests characterize current backend behavior. They do not replace browser-b
 
 ### Isolated database lifecycle
 
-Global setup starts an ephemeral MongoDB instance and provides a URI for the exact database name:
+Global setup starts an ephemeral single-member MongoDB replica set using wiredTiger and provides a URI for the exact database name:
 
 ```text
 soundtrack-mood-explorer-test

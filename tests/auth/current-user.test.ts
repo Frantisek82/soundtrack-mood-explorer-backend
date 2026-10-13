@@ -50,12 +50,47 @@ describe("GET /api/user/me", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body).toMatchObject({
+    expect(body).toEqual({
       _id: user._id.toString(),
       name: "Test User",
       email: "test@example.com",
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
+      __v: user.__v,
     });
     expect(body).not.toHaveProperty("password");
+  });
+
+  it("excludes internal and unexpected database fields", async () => {
+    const user = await User.create({
+      name: "Private Fields User",
+      email: "private-fields@example.com",
+      password: "stored-password",
+      spotifyLinkGeneration: 7,
+    });
+
+    await User.collection.updateOne(
+      { _id: user._id },
+      { $set: { futurePrivateField: "test-only-private-value" } },
+    );
+
+    setAuthenticationToken(
+      generateToken({
+        id: user._id.toString(),
+        email: user.email,
+      }),
+    );
+
+    const response = await GET(createCurrentUserRequest());
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(Object.keys(body).sort()).toEqual(
+      ["_id", "name", "email", "createdAt", "updatedAt", "__v"].sort(),
+    );
+    expect(body).not.toHaveProperty("password");
+    expect(body).not.toHaveProperty("spotifyLinkGeneration");
+    expect(body).not.toHaveProperty("futurePrivateField");
   });
 
   it("rejects a missing authentication token", async () => {
