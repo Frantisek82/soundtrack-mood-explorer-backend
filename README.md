@@ -164,9 +164,9 @@ Environment variables required:
 
 ## Spotify OAuth foundation
 
-Configuration, request-security, transaction-cookie, encrypted persistence, and generation-coordination helpers are available. OAuth routes and frontend controls follow in later issues.
+The backend includes Spotify connection-start and callback routes, encrypted persistence, and generation coordination. Frontend controls, refresh/status, and disconnect route integration follow in later issues.
 
-See [Spotify configuration](docs/spotify-configuration.md), [encrypted persistence](docs/spotify-persistence.md), and [OAuth architecture](docs/spotify-oauth-plan.md).
+See [account linking](docs/spotify-account-linking.md), [configuration](docs/spotify-configuration.md), [encrypted persistence](docs/spotify-persistence.md), and [architecture](docs/spotify-oauth-plan.md).
 
 ---
 

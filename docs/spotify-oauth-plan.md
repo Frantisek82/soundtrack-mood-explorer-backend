@@ -101,7 +101,7 @@ Start/status return 401 for absent/invalid session or missing User; mutation ori
 
 Status DTO: `{ "state": "disconnected", "account": null }`, or connected/reauthorization_required with `{ "displayName": "..." }` (nullable). No refresh is triggered by status polling. Only backend provider operations request a fresh access token. Do not mark provider outages as disconnected.
 
-Before frontend implementation, inspect its actual profile route and select one fixed callback destination within it; document that path here. This route name is still unverified. Return only a bounded result enum: connected, denied, invalid_transaction, session_expired, account_conflict or provider_error. Never include code, state, verifier, provider error text or tokens in frontend redirects. Callback errors use that same trusted destination; frontend fetches status after returning. Callback responses set Referrer-Policy: no-referrer and no-store.
+The frontend /profile route has been inspected. The fixed callback destination and frontend requirements are recorded in the OAuth callback return contract below. Return only a bounded result enum: connected, denied, invalid_transaction, session_expired, account_conflict or provider_error. Never include code, state, verifier, provider error text or tokens in frontend redirects. Callback errors use that same trusted destination; frontend fetches status after returning. Callback responses set Referrer-Policy: no-referrer and no-store.
 
 Frontend provides Connect, Reconnect and Disconnect; recognizes all three states; explains allowlisted demonstration access; exposes no token endpoint. Connection does not create or replace application login. Disable OAuth controls in previews.
 
@@ -160,9 +160,39 @@ Keep tests with their implementation issues. Open frontend dependencies before c
 ## 12. Remaining gates
 
 - Verify selected minimal-scope /me access and PKCE exchange with the allowlisted account during implementation.
-- Inspect frontend routes and record the exact fixed callback destination before implementing redirects.
+- Implement the agreed frontend callback-result handling in frontend #44.
 - Register production callback before deployed testing.
 - Verify transaction support/index creation, secure key configuration, privacy/end-user notices, callback log redaction and backup deletion behavior before enabling real-user OAuth.
 - Complete local/deployed browser checks before claiming milestone acceptance.
 
 Issue #33 closes only after this plan is committed/reviewed and the ordered follow-up issues and dependencies are recorded. End-to-end manual verification belongs to implementation/release issues; public Spotify access remains outside this milestone.
+
+## OAuth callback return contract
+
+The frontend src/app/profile/page.tsx was inspected.
+
+The backend returns HTTP 303 to the configured frontend origin with the fixed path:
+
+/profile?spotify=<result>
+
+Allowed results:
+- connected
+- denied
+- invalid_transaction
+- session_expired
+- account_conflict
+- provider_error
+
+No caller-supplied return URL is accepted. Provider codes, state, tokens,
+verifiers, and raw error messages must never appear in the return URL.
+
+The result parameter is only a notification, not proof of connection.
+The frontend must fetch authenticated backend connection status.
+
+Frontend #44 must implement result handling, remove the notification parameter
+after processing, and preserve a session_expired notice when the profile
+authentication guard redirects to the fixed /login route. Unknown or duplicate
+result parameters must not produce a success notification.
+
+The URL helper and its 11 tests are implemented on the backend #37 branch.
+Frontend handling is still pending; no frontend code has changed.
