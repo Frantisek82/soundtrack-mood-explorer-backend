@@ -1,7 +1,8 @@
 # Spotify encrypted persistence foundation
 
-Implemented for issue #36. OAuth routes and provider integration follow in
-later issues.
+Implemented for issue #36. Connection-start and callback integration is
+documented in [account linking](spotify-account-linking.md). Refresh and
+disconnect route integration follow in later issues.
 
 See [configuration](spotify-configuration.md) and
 [architecture](spotify-oauth-plan.md).
@@ -23,8 +24,8 @@ Indexes provide unique state hashes, user-based cleanup, and TTL expiry.
 Hashes and verifier are excluded from ordinary queries, and direct document
 JSON serialization is blocked.
 
-TTL deletion is asynchronous. Callback expiry checks and single-use consumption
-must still be implemented in #37.
+TTL deletion is asynchronous. The #37 callback explicitly validates expiry
+and atomically consumes matching transactions; TTL is only housekeeping.
 
 toSpotifyConnectionStatus() creates an explicit public DTO containing only
 state and nullable displayName. It never spreads or serializes a database record.

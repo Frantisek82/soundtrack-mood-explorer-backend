@@ -2,9 +2,11 @@
 
 This document covers the helpers introduced in issue #35.
 
-OAuth routes and frontend controls follow in later issues. The encrypted
-persistence foundation is described in [Spotify persistence](spotify-persistence.md).
-Setting SPOTIFY_ENABLED does not by itself provide a working integration.
+Connection-start and callback routes are implemented in #37. Frontend controls,
+status and disconnect routes follow in later issues. See
+[account linking](spotify-account-linking.md) and
+[encrypted persistence](spotify-persistence.md).
+Keep OAuth disabled until the required enablement checks are complete.
 
 Architecture: [Spotify OAuth plan](spotify-oauth-plan.md).
 
