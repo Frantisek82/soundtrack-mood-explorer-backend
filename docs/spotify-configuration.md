@@ -2,9 +2,10 @@
 
 This document covers the helpers introduced in issue #35.
 
-Connection-start and callback routes are implemented in #37. Frontend controls,
-status and disconnect routes follow in later issues. See
-[account linking](spotify-account-linking.md) and
+Connection-start and callback routes are implemented in #37. Token refresh and
+connection status are implemented in #38. Frontend controls and disconnect routes
+follow separately. See [account linking](spotify-account-linking.md),
+[refresh and status](spotify-refresh-status.md), and
 [encrypted persistence](spotify-persistence.md).
 Keep OAuth disabled until the required enablement checks are complete.
 
@@ -135,7 +136,8 @@ clearSpotifyTransactionCookie() uses the same path and security attributes,
 an empty value, Max-Age=0, and an expired date.
 
 The cookie contains a random browser binding, not Spotify tokens.
-Server-side transaction binding, expiry, and replay protection follow in #37.
+Server-side transaction binding, explicit expiry validation, and replay protection
+are implemented in #37.
 
 ## Validation
 
