@@ -3,7 +3,8 @@
 This document covers the helpers introduced in issue #35.
 
 Connection-start and callback routes are implemented in #37. Token refresh and
-connection status are implemented in #38. Frontend controls and disconnect routes
+connection status are implemented in #38. Disconnect and Spotify cleanup during
+account deletion are implemented in #39. Frontend controls and production verification
 follow separately. See [account linking](spotify-account-linking.md),
 [refresh and status](spotify-refresh-status.md), and
 [encrypted persistence](spotify-persistence.md).

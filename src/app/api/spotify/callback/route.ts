@@ -1,3 +1,8 @@
+import {
+  SpotifyOperationInvalidatedError,
+  withSpotifyOperation,
+} from "@/lib/spotify/operations";
+import { withinSignal } from "@/lib/spotify/refresh-provider";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -73,64 +78,79 @@ export async function GET(req: Request) {
 
     await connectDB();
     const applicationSession = await requireSpotifyApplicationSession();
-    const cookieStore = await cookies();
-    const browserBinding = cookieStore.get(SPOTIFY_TRANSACTION_COOKIE)?.value;
-
-    if (!browserBinding) {
-      throw new SpotifyOAuthTransactionError();
-    }
-
-    await assertSpotifyPersistenceReady();
-
-    const consumed = await consumeSpotifyOAuthTransaction({
-      ...applicationSession,
-      state: parameters.state,
-      browserBinding,
-      config,
-    });
-
-    if (parameters.kind === "denied") {
-      return complete("denied");
-    }
-    if (parameters.kind === "provider_error") {
-      return complete("provider_error");
-    }
-
-    const verifier = decryptSpotifyCredential(
-      consumed.encryptedVerifier,
+    return await withSpotifyOperation(
       {
         userId: applicationSession.userId,
         generation: applicationSession.generation,
-        purpose: "pkce_verifier",
+        signal: req.signal,
       },
-      config,
+      async signal => {
+        const cookieStore = await cookies();
+        const browserBinding = cookieStore.get(SPOTIFY_TRANSACTION_COOKIE)?.value;
+
+        if (!browserBinding) {
+          throw new SpotifyOAuthTransactionError();
+        }
+
+        await assertSpotifyPersistenceReady();
+
+        const consumed = await consumeSpotifyOAuthTransaction({
+          ...applicationSession,
+          state: parameters.state,
+          browserBinding,
+          config,
+        });
+
+        if (parameters.kind === "denied") {
+          return complete("denied");
+        }
+        if (parameters.kind === "provider_error") {
+          return complete("provider_error");
+        }
+
+        const verifier = decryptSpotifyCredential(
+          consumed.encryptedVerifier,
+          {
+            userId: applicationSession.userId,
+            generation: applicationSession.generation,
+            purpose: "pkce_verifier",
+          },
+          config,
+        );
+
+        // Provider HTTP is outside the database transaction.
+        const authorization = await withinSignal(
+          authorizeSpotifyAccount({
+            code: parameters.code,
+            verifier,
+            config,
+            signal,
+          }),
+          signal,
+        );
+        signal.throwIfAborted();
+
+        // Recheck session expiry and User state after provider requests.
+        const currentSession = await requireSpotifyApplicationSession();
+        if (
+          currentSession.userId !== applicationSession.userId ||
+          currentSession.sessionToken !== applicationSession.sessionToken ||
+          currentSession.generation !== applicationSession.generation
+        ) {
+          throw new SpotifyOAuthTransactionError();
+        }
+
+        signal.throwIfAborted();
+        await persistSpotifyAccountLink({
+          userId: applicationSession.userId,
+          generation: applicationSession.generation,
+          authorization,
+          config,
+        });
+
+        return complete("connected");
+      },
     );
-
-    // Provider HTTP is outside the database transaction.
-    const authorization = await authorizeSpotifyAccount({
-      code: parameters.code,
-      verifier,
-      config,
-    });
-
-    // Recheck session expiry and User state after provider requests.
-    const currentSession = await requireSpotifyApplicationSession();
-    if (
-      currentSession.userId !== applicationSession.userId ||
-      currentSession.sessionToken !== applicationSession.sessionToken ||
-      currentSession.generation !== applicationSession.generation
-    ) {
-      throw new SpotifyOAuthTransactionError();
-    }
-
-    await persistSpotifyAccountLink({
-      userId: applicationSession.userId,
-      generation: applicationSession.generation,
-      authorization,
-      config,
-    });
-
-    return complete("connected");
   } catch (error) {
     if (error instanceof SpotifySessionError) {
       return complete("session_expired");
@@ -139,6 +159,7 @@ export async function GET(req: Request) {
       return complete("account_conflict");
     }
     if (
+      error instanceof SpotifyOperationInvalidatedError ||
       error instanceof SpotifyCallbackParametersError ||
       error instanceof SpotifyOAuthTransactionError ||
       error instanceof SpotifyGenerationError

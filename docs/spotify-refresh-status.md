@@ -3,8 +3,9 @@
 Backend implementation for issue #38. See [account linking](spotify-account-linking.md),
 [configuration](spotify-configuration.md), and [persistence](spotify-persistence.md).
 
-Disconnect/account-deletion route integration remains in #39, frontend controls
-in frontend #44, and production enablement verification in #40.
+Disconnect and Spotify account-deletion cleanup are implemented in #39; see
+[disconnect and deletion](spotify-disconnect-deletion.md). Frontend controls remain
+in frontend #44, production verification in #40, and custom Playlist cleanup in #45.
 
 ## Backend-only access-token service
 

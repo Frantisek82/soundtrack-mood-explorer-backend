@@ -1,3 +1,7 @@
+import {
+  SpotifyOperationInvalidatedError,
+  withSpotifyOperation,
+} from "./operations";
 import { setTimeout as delay } from "node:timers/promises";
 
 import SpotifyConnection from "@/models/SpotifyConnection";
@@ -154,7 +158,7 @@ async function readOnce(
 
 // Backend only. Fixed safe GET destination; no caller-supplied URL.
 // One shared budget covers token acquisition, refresh, waits and GET attempts.
-export async function readSpotifyCurrentProfile(
+async function readSpotifyCurrentProfileWithinOperation(
   input: Input,
 ): Promise<{ displayName: string | null }> {
   const deadline = performance.now() + 20_000;
@@ -245,6 +249,26 @@ export async function readSpotifyCurrentProfile(
         error.retryAfterSeconds,
       );
     }
+    throw new SpotifyReadError("unavailable");
+  }
+}
+
+// Registers before database generation validation and provider dispatch.
+export async function readSpotifyCurrentProfile(input: Input): Promise<{ displayName: string | null }> {
+  try {
+    return await withSpotifyOperation(
+      {
+        userId: input.userId,
+        generation: input.generation,
+        signal: input.signal,
+      },
+      signal => readSpotifyCurrentProfileWithinOperation({ ...input, signal }),
+    );
+  } catch (error) {
+    if (error instanceof SpotifyOperationInvalidatedError) {
+      throw new SpotifyReadError("connection_changed");
+    }
+    if (error instanceof SpotifyReadError) throw error;
     throw new SpotifyReadError("unavailable");
   }
 }

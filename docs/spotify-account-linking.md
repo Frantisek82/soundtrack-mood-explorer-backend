@@ -19,7 +19,9 @@ Implemented:
 
 Connection-status and refresh services are implemented in #38; see
 [refresh and status](spotify-refresh-status.md). Frontend controls remain in
-frontend #44, and disconnect/account-deletion route integration remains in #39.
+frontend #44. Disconnect and Spotify account-deletion cleanup are implemented
+in #39; see [disconnect and deletion](spotify-disconnect-deletion.md).
+Custom Playlist cleanup remains in #45.
 
 Keep OAuth disabled for general users until the remaining enablement requirements
 are resolved. Automated tests do not establish live Spotify access.

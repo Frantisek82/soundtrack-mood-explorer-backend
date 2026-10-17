@@ -1,3 +1,7 @@
+import {
+  SpotifyOperationInvalidatedError,
+  withSpotifyOperation,
+} from "./operations";
 import { setTimeout as delay } from "node:timers/promises";
 
 import { connectDB } from "@/lib/db";
@@ -94,7 +98,7 @@ function credential(value: string): string {
 
 // Backend only. Never return this credential-bearing result from a route.
 // HTTP runs outside automatically retried database transactions.
-export async function getSpotifyAccessToken(input: Input): Promise<SpotifyAccessToken> {
+async function getSpotifyAccessTokenWithinOperation(input: Input): Promise<SpotifyAccessToken> {
   const signal = AbortSignal.any([
     AbortSignal.timeout(20_000),
     ...(input.signal ? [input.signal] : []),
@@ -295,6 +299,26 @@ export async function getSpotifyAccessToken(input: Input): Promise<SpotifyAccess
     if (error instanceof SpotifyGenerationError) {
       throw new SpotifyAccessTokenError("connection_changed");
     }
+    throw new SpotifyAccessTokenError("unavailable");
+  }
+}
+
+// Registers before database generation validation and provider dispatch.
+export async function getSpotifyAccessToken(input: Input): Promise<SpotifyAccessToken> {
+  try {
+    return await withSpotifyOperation(
+      {
+        userId: input.userId,
+        generation: input.generation,
+        signal: input.signal,
+      },
+      signal => getSpotifyAccessTokenWithinOperation({ ...input, signal }),
+    );
+  } catch (error) {
+    if (error instanceof SpotifyOperationInvalidatedError) {
+      throw new SpotifyAccessTokenError("connection_changed");
+    }
+    if (error instanceof SpotifyAccessTokenError) throw error;
     throw new SpotifyAccessTokenError("unavailable");
   }
 }

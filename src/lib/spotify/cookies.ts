@@ -12,11 +12,11 @@ export function createSpotifyBrowserBinding(): string {
   return randomBytes(32).toString("base64url");
 }
 
-function cookieOptions(config: EnabledSpotifyConfig) {
+function cookieOptions(secure: boolean) {
   return {
     name: SPOTIFY_TRANSACTION_COOKIE,
     httpOnly: true,
-    secure: new URL(config.redirectUri).protocol === "https:",
+    secure,
     sameSite: "lax" as const,
     path: "/api/spotify",
   };
@@ -35,7 +35,7 @@ export function setSpotifyTransactionCookie(
   }
 
   response.cookies.set({
-    ...cookieOptions(config),
+    ...cookieOptions(new URL(config.redirectUri).protocol === "https:"),
     value: binding,
     maxAge: SPOTIFY_TRANSACTION_TTL_SECONDS,
   });
@@ -45,8 +45,20 @@ export function clearSpotifyTransactionCookie(
   response: NextResponse,
   config: EnabledSpotifyConfig,
 ): void {
+  clearSpotifyTransactionCookieForTransport(
+    response,
+    new URL(config.redirectUri).protocol === "https:",
+  );
+}
+
+// Account deletion must work without enabled or valid Spotify configuration.
+// The caller supplies whether the current response is served over HTTPS.
+export function clearSpotifyTransactionCookieForTransport(
+  response: NextResponse,
+  secure: boolean,
+): void {
   response.cookies.set({
-    ...cookieOptions(config),
+    ...cookieOptions(secure),
     value: "",
     maxAge: 0,
     expires: new Date(0),

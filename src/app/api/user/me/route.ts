@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 
 import User from "@/models/User";
-import Favorite from "@/models/Favorite";
 import { verifyToken } from "@/lib/jwt";
 import { connectDB } from "@/lib/db";
+import { deleteApplicationAccount } from "@/lib/account-deletion";
+import { clearSpotifyTransactionCookieForTransport } from "@/lib/spotify/cookies";
+import { SpotifyGenerationError } from "@/lib/spotify/generation";
+import {
+  requireSpotifyApplicationSession,
+  SpotifySessionError,
+} from "@/lib/spotify/session";
 
 /**
  * CORS configuration
@@ -122,26 +127,23 @@ export async function PUT(req: Request) {
  */
 export async function DELETE(req: Request) {
   const origin = req.headers.get("origin");
+  const headers = {
+    ...getCorsHeaders(origin),
+    "Cache-Control": "no-store",
+  };
 
   try {
     await connectDB();
+    const { userId } = await requireSpotifyApplicationSession();
 
-    const userId = await getUserIdFromCookies();
-
-    // Delete favorites first (cascade)
-    await Favorite.deleteMany({
-      userId: new mongoose.Types.ObjectId(userId),
-    });
-
-    // Delete user
-    await User.findByIdAndDelete(userId);
+    await deleteApplicationAccount(userId);
 
     const response = NextResponse.json(
       { message: "Account deleted successfully" },
-      { headers: getCorsHeaders(origin) },
+      { headers },
     );
 
-    // Clear auth cookie after deletion
+    // Clear cookies only after the deletion transaction commits.
     response.cookies.set({
       name: "token",
       value: "",
@@ -149,11 +151,26 @@ export async function DELETE(req: Request) {
       path: "/",
     });
 
+    clearSpotifyTransactionCookieForTransport(
+      response,
+      new URL(req.url).protocol === "https:",
+    );
+
     return response;
-  } catch {
+  } catch (error) {
+    if (
+      error instanceof SpotifySessionError ||
+      error instanceof SpotifyGenerationError
+    ) {
+      return NextResponse.json(
+        { message: "Unauthorized" },
+        { status: 401, headers },
+      );
+    }
+
     return NextResponse.json(
-      { message: "Unauthorized" },
-      { status: 401, headers: getCorsHeaders(origin) },
+      { message: "Internal server error" },
+      { status: 500, headers },
     );
   }
 }
