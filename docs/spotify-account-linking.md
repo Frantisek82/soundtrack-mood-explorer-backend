@@ -17,8 +17,9 @@ Implemented:
 - Encrypted account linking and same-account reauthorization.
 - Fixed callback redirects with bounded result codes.
 
-Frontend controls, connection-status and refresh services, and disconnect/account
-deletion route integration follow in #44, #38, and #39 respectively.
+Connection-status and refresh services are implemented in #38; see
+[refresh and status](spotify-refresh-status.md). Frontend controls remain in
+frontend #44, and disconnect/account-deletion route integration remains in #39.
 
 Keep OAuth disabled for general users until the remaining enablement requirements
 are resolved. Automated tests do not establish live Spotify access.

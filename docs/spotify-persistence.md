@@ -1,8 +1,9 @@
 # Spotify encrypted persistence foundation
 
 Implemented for issue #36. Connection-start and callback integration is
-documented in [account linking](spotify-account-linking.md). Refresh and
-disconnect route integration follow in later issues.
+documented in [account linking](spotify-account-linking.md). Refresh coordination
+is documented in [refresh and status](spotify-refresh-status.md).
+Disconnect route integration follows in #39.
 
 See [configuration](spotify-configuration.md) and
 [architecture](spotify-oauth-plan.md).
@@ -113,8 +114,8 @@ email delivery, or other external side effects inside them.
 
 Provider requests occur outside transactions. Afterwards, persistence must
 revalidate generation and, where relevant, token version and lease ownership.
-Refresh fencing follows in #38; disconnect and account-deletion routes follow
-in #39.
+Refresh fencing is implemented in #38; disconnect and account-deletion routes
+follow in #39.
 
 The coordination helpers do not automatically delete connections or pending
 OAuth transactions. Route services must supply the complete cleanup callback.
@@ -123,8 +124,9 @@ the tested deletion workflow.
 
 ## Persistence readiness
 
-After connectDB(), future enabled OAuth services must call
-assertSpotifyPersistenceReady() before permitting persistence.
+Connection-start and callback routes call assertSpotifyPersistenceReady()
+before OAuth transaction/link persistence. Refresh coordination also requires
+transaction-capable MongoDB; failed transactions prevent refresh persistence.
 
 It verifies writable transaction-capable topology and sessions, creates the
 declared Spotify indexes without removing existing indexes, verifies their

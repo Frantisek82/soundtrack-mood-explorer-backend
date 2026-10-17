@@ -1,6 +1,8 @@
 # Spotify OAuth requirements and implementation plan
 
-Status: proposed architecture; implementation has not started.
+Status: configuration, encrypted persistence, account linking, and refresh/status
+are implemented. Disconnect integration, frontend controls, and release verification
+remain in their follow-up issues.
 
 Milestone: v2.2.0 – Spotify OAuth Integration. Planning issue: [#33](https://github.com/Frantisek82/soundtrack-mood-explorer-backend/issues/33).
 
@@ -30,7 +32,7 @@ Dashboard evidence supplied by the app owner confirms:
 
 Development Mode requires an owner with Premium and allows five authenticated users. Non-allowlisted users can reach authorization but their Web API calls can return 403. Extended access is not automatic: current partner eligibility includes a registered organization, launched service and at least 250,000 monthly active users, followed by approval. This milestone is an allowlisted portfolio demonstration, not unrestricted public Spotify access. See [quota modes](https://developer.spotify.com/documentation/web-api/concepts/quota-modes).
 
-Configuration feasibility is established. Successful authorization, token exchange, basic profile access, and deployed browser behavior remain manual implementation checks. Do not claim end-to-end access is already verified.
+Configuration feasibility and local authorization, PKCE token exchange, and basic profile access were verified with the allowlisted account on 16 October 2026; see [account linking](spotify-account-linking.md). Deployed browser behavior and complete frontend integration remain unverified.
 
 ## 3. Environment and redirects
 
@@ -159,7 +161,7 @@ Keep tests with their implementation issues. Open frontend dependencies before c
 
 ## 12. Remaining gates
 
-- Verify selected minimal-scope /me access and PKCE exchange with the allowlisted account during implementation.
+- Local minimal-scope /me access and PKCE exchange were verified with the allowlisted account on 16 October 2026. Deployed verification remains pending.
 - Implement the agreed frontend callback-result handling in frontend #44.
 - Register production callback before deployed testing.
 - Verify transaction support/index creation, secure key configuration, privacy/end-user notices, callback log redaction and backup deletion behavior before enabling real-user OAuth.
@@ -194,5 +196,5 @@ after processing, and preserve a session_expired notice when the profile
 authentication guard redirects to the fixed /login route. Unknown or duplicate
 result parameters must not produce a success notification.
 
-The URL helper and its 11 tests are implemented on the backend #37 branch.
+The URL helper and its 11 tests were merged through backend #37.
 Frontend handling is still pending; no frontend code has changed.
