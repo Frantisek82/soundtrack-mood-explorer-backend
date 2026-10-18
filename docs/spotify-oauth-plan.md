@@ -1,8 +1,8 @@
 # Spotify OAuth requirements and implementation plan
 
-Status: configuration, encrypted persistence, account linking, and refresh/status
-are implemented. Disconnect integration, frontend controls, and release verification
-remain in their follow-up issues.
+Status: configuration, encrypted persistence, account linking, refresh/status,
+and Spotify disconnect/account-deletion cleanup are implemented. Frontend controls,
+production verification, and the Playlist deletion defect remain unresolved.
 
 Milestone: v2.2.0 – Spotify OAuth Integration. Planning issue: [#33](https://github.com/Frantisek82/soundtrack-mood-explorer-backend/issues/33).
 
@@ -127,7 +127,7 @@ Use ten-second per-call timeout and a twenty-second overall provider-operation b
 
 ## 9. Disconnect, account deletion and privacy
 
-Disconnect transaction increments User generation, deletes SpotifyConnection and every pending transaction for the user, and clears the current browser binding cookie. Account deletion coordinates through the same User write and removes connections/transactions before deleting User. Existing application data cleanup must remain intact; the inspected deletion route omits custom Playlist cleanup, which should be tracked explicitly as an account-deletion defect rather than silently documented as complete.
+Disconnect transaction increments User generation, deletes SpotifyConnection and every pending transaction for the user, and clears the current browser binding cookie. Account deletion coordinates through the same User write and removes connections/transactions before deleting User. Favorites and Spotify data are removed transactionally with the User. Custom Playlist cleanup remains an unresolved account-deletion defect tracked in #45. See [disconnect and deletion](spotify-disconnect-deletion.md) for implemented behavior and unresolved retention/restore gates in #40.
 
 In-flight callbacks/refreshes cannot restore deleted credentials. Cancel local HTTP work where possible; cross-instance work already dispatched may finish, but must discard results and never initiate more processing for the disconnected generation. Success is returned only after database cleanup commits; a failure is not reported as successful disconnect.
 
