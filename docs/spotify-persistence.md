@@ -4,8 +4,8 @@ Implemented for issue #36. Connection-start and callback integration is
 documented in [account linking](spotify-account-linking.md). Refresh coordination
 is documented in [refresh and status](spotify-refresh-status.md).
 Disconnect and Spotify account-deletion cleanup are implemented in #39; see
-[disconnect and deletion](spotify-disconnect-deletion.md). Custom Playlist cleanup
-remains tracked separately in #45.
+[disconnect and deletion](spotify-disconnect-deletion.md). Owned custom Playlists
+are also removed transactionally during account deletion through #45.
 
 See [configuration](spotify-configuration.md) and
 [architecture](spotify-oauth-plan.md).
@@ -117,7 +117,8 @@ email delivery, or other external side effects inside them.
 Provider requests occur outside transactions. Afterwards, persistence must
 revalidate generation and, where relevant, token version and lease ownership.
 Refresh fencing is implemented in #38. Disconnect and Spotify account-deletion
-cleanup use this coordination in #39. Custom Playlist cleanup remains in #45.
+cleanup use this coordination in #39. Owned custom Playlist cleanup uses the
+same transaction in #45.
 
 The coordination helpers do not automatically delete connections or pending
 OAuth transactions. Route services must supply the complete cleanup callback.

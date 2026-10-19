@@ -14,6 +14,7 @@ import type { SpotifyConfig } from "@/lib/spotify/config";
 import { persistSpotifyAccountLink } from "@/lib/spotify/link";
 import { createSpotifyOAuthTransaction } from "@/lib/spotify/transactions";
 import Favorite from "@/models/Favorite";
+import Playlist from "@/models/Playlist";
 import SpotifyConnection from "@/models/SpotifyConnection";
 import SpotifyOAuthTransaction from "@/models/SpotifyOAuthTransaction";
 import User from "@/models/User";
@@ -55,6 +56,11 @@ async function fixture(suffix = "owner", linked = true) {
     soundtrackId: new Types.ObjectId(),
   });
 
+  await Playlist.create([
+    { userId, name: "First test playlist", soundtracks: [] },
+    { userId, name: "Second test playlist", soundtracks: [] },
+  ]);
+
   if (linked) {
     await persistSpotifyAccountLink({
       userId,
@@ -81,6 +87,7 @@ async function expectPreserved(userId: string) {
   expect(user).not.toBeNull();
   expect(user?.spotifyLinkGeneration).toBe(0);
   await expect(Favorite.countDocuments({ userId })).resolves.toBe(1);
+  await expect(Playlist.countDocuments({ userId })).resolves.toBe(2);
   await expect(SpotifyConnection.countDocuments({ userId })).resolves.toBe(1);
   await expect(SpotifyOAuthTransaction.countDocuments({ userId })).resolves.toBe(2);
 }
@@ -89,6 +96,7 @@ describe("Transactional application-account deletion", () => {
   beforeAll(async () => {
     await User.init();
     await Favorite.init();
+    await Playlist.init();
     await SpotifyConnection.init();
     await SpotifyOAuthTransaction.init();
   });
@@ -115,6 +123,7 @@ describe("Transactional application-account deletion", () => {
 
     await expect(User.findById(userId)).resolves.toBeNull();
     await expect(Favorite.countDocuments({ userId })).resolves.toBe(0);
+    await expect(Playlist.countDocuments({ userId })).resolves.toBe(0);
     await expect(SpotifyConnection.countDocuments({ userId })).resolves.toBe(0);
     await expect(SpotifyOAuthTransaction.countDocuments({ userId })).resolves.toBe(0);
   });
@@ -136,6 +145,7 @@ describe("Transactional application-account deletion", () => {
 
     await expect(User.findById(userId)).resolves.toBeNull();
     await expect(Favorite.countDocuments({ userId })).resolves.toBe(0);
+    await expect(Playlist.countDocuments({ userId })).resolves.toBe(0);
   });
 
   it("cleans up existing Spotify data even when Spotify is disabled", async () => {
@@ -180,6 +190,17 @@ describe("Transactional application-account deletion", () => {
 
     await expect(deleteApplicationAccount(userId))
       .rejects.toThrow("test-only-favorite-cleanup-failure");
+    await expectPreserved(userId);
+  });
+
+  it("rolls back Spotify and Favorite cleanup when Playlist deletion fails", async () => {
+    const userId = await fixture();
+    vi.spyOn(Playlist, "deleteMany").mockImplementationOnce(() => {
+      throw new Error("test-only-playlist-cleanup-failure");
+    });
+
+    await expect(deleteApplicationAccount(userId))
+      .rejects.toThrow("test-only-playlist-cleanup-failure");
     await expectPreserved(userId);
   });
 
