@@ -5,7 +5,8 @@ Backend implementation for issue #38. See [account linking](spotify-account-link
 
 Disconnect and Spotify account-deletion cleanup are implemented in #39; see
 [disconnect and deletion](spotify-disconnect-deletion.md). Frontend controls remain
-in frontend #44, production verification in #40, and custom Playlist cleanup in #45.
+in frontend #44 and production verification in #40. Owned custom Playlist
+cleanup during account deletion is implemented in #45.
 
 ## Backend-only access-token service
 

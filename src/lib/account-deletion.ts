@@ -2,6 +2,7 @@ import { abortSpotifyOperationsBeforeGeneration } from "./spotify/operations";
 import { Types } from "mongoose";
 
 import Favorite from "@/models/Favorite";
+import Playlist from "@/models/Playlist";
 import User from "@/models/User";
 
 import { removeSpotifyData } from "./spotify/disconnect";
@@ -22,7 +23,9 @@ export async function deleteApplicationAccount(userId: string): Promise<number> 
         userId: new Types.ObjectId(userId),
       }).session(session);
 
-      // Existing Playlist cleanup omission is tracked separately in #45.
+      await Playlist.deleteMany({
+        userId: new Types.ObjectId(userId),
+      }).session(session);
       const deleted = await User.deleteOne({ _id: userId }).session(session);
       if (deleted.deletedCount !== 1) {
         throw new SpotifyGenerationError("stale_spotify_generation");

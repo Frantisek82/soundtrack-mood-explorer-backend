@@ -1,8 +1,9 @@
 # Spotify OAuth requirements and implementation plan
 
 Status: configuration, encrypted persistence, account linking, refresh/status,
-and Spotify disconnect/account-deletion cleanup are implemented. Frontend controls,
-production verification, and the Playlist deletion defect remain unresolved.
+and Spotify disconnect/account-deletion cleanup are implemented. Owned Playlist
+cleanup is implemented in #45. Frontend controls and production verification
+remain unresolved.
 
 Milestone: v2.2.0 – Spotify OAuth Integration. Planning issue: [#33](https://github.com/Frantisek82/soundtrack-mood-explorer-backend/issues/33).
 
@@ -127,7 +128,7 @@ Use ten-second per-call timeout and a twenty-second overall provider-operation b
 
 ## 9. Disconnect, account deletion and privacy
 
-Disconnect transaction increments User generation, deletes SpotifyConnection and every pending transaction for the user, and clears the current browser binding cookie. Account deletion coordinates through the same User write and removes connections/transactions before deleting User. Favorites and Spotify data are removed transactionally with the User. Custom Playlist cleanup remains an unresolved account-deletion defect tracked in #45. See [disconnect and deletion](spotify-disconnect-deletion.md) for implemented behavior and unresolved retention/restore gates in #40.
+Disconnect transaction increments User generation, deletes SpotifyConnection and every pending transaction for the user, and clears the current browser binding cookie. Account deletion coordinates through the same User write and removes connections/transactions before deleting User. Favorites, owned custom Playlists, and Spotify data are removed transactionally with the User. Playlist cleanup is implemented in #45 and preserves other users' Playlists and the shared Soundtrack catalogue. See [disconnect and deletion](spotify-disconnect-deletion.md) for implemented behavior and unresolved retention/restore gates in #40.
 
 In-flight callbacks/refreshes cannot restore deleted credentials. Cancel local HTTP work where possible; cross-instance work already dispatched may finish, but must discard results and never initiate more processing for the disconnected generation. Success is returned only after database cleanup commits; a failure is not reported as successful disconnect.
 
@@ -153,7 +154,7 @@ These are proposed titles, not created issues or completed work.
 2. **Add encrypted Spotify persistence and transactional test foundation** — connections/transactions, indexes, User generation and safe serialization, key lifecycle, replica-set isolation and transaction/concurrency checks.
 3. **Implement Spotify PKCE start, callback and stable account linking** — single-use browser/session binding, provider validation, duplicate policy, fixed redirects and callback tests. Requires verified frontend destination.
 4. **Implement Spotify token refresh and connection status** — distributed lease/fencing, expiry, invalid_grant, retry budgets, safe status contract and lifecycle tests.
-5. **Implement Spotify disconnect and account-deletion cleanup** — generation invalidation, transactional cleanup, in-flight protection, revocation guidance and deletion regression tests. Coordinate separately tracked Playlist deletion defect.
+5. **Implement Spotify disconnect and account-deletion cleanup** — generation invalidation, transactional cleanup, in-flight protection, revocation guidance and deletion regression tests. Owned Playlist deletion is implemented separately in #45.
 6. **Add frontend Spotify connection controls and required notices** — profile UI, states/errors, fixed return destination, privacy/end-user disclosures, demonstration limits and frontend tests.
 7. **Validate deployed Spotify integration and finish milestone documentation** — register production callback, private environment setup, logging/backup review, manual browser checks, regression validation and release notes.
 

@@ -38,16 +38,18 @@ No Spotify HTTP request or undocumented provider revocation endpoint is used.
 ## Application-account deletion
 
 DELETE /api/user/me coordinates through the same User-generation transaction.
-It removes the User, Favorites, Spotify connection, and pending OAuth transactions.
+It removes the User, Favorites, owned custom Playlists, Spotify connection,
+and pending OAuth transactions.
 
 Spotify cleanup works even when Spotify is disabled or its configuration is invalid.
 The success contract remains 200 {"message":"Account deleted successfully"}.
 The current browser's authentication and Spotify transaction cookies are cleared
 only after commit. Cleanup failure rolls back all changes and returns a generic 500.
 
-Existing custom Playlist cleanup is missing and tracked separately in #45.
-Application-account data deletion must not be described as complete until that
-defect is resolved. Shared Soundtrack catalogue records are not deleted.
+Owned custom Playlist cleanup is implemented in #45 within the same transaction.
+Other users' Playlists and shared Soundtrack catalogue records are preserved.
+Active-database cleanup does not establish deletion from backups or historical
+copies; operational verification remains in #40.
 
 This work does not redesign application-wide JWT revocation. Spotify routes
 require an existing User and reject sessions for deleted users.
@@ -122,7 +124,7 @@ Before enabling general-user OAuth, #40 must:
   fresh authorization is one safeguard to evaluate.
 - Establish how account-deletion requests survive a restore and are reapplied.
 - Verify deployment callback log redaction and privacy/end-user disclosures.
-- Resolve the Playlist deletion defect in #45 before claiming complete account deletion.
+- Verify owned Playlist cleanup (#45) during deployed account-deletion checks.
 - Complete frontend disconnect instructions and local/deployed browser validation.
 
 These are unresolved operational gates, not completed capabilities. Keep OAuth
