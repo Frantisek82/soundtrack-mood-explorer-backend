@@ -191,3 +191,15 @@ is validated with another fake-value probe.
 
 Reference:
 https://vercel.com/docs/logs/runtime
+
+## Vercel clarification requested — 21 October 2026
+
+The maintainer posted a public configuration question:
+https://community.vercel.com/t/exclude-oauth-callback-query-parameters-from-runtime-logs-before-storage-hobby/51106
+
+The question asks whether Runtime Logs can exclude or redact OAuth code/state
+query values before ingestion/storage, and which plan and exact setting
+would provide that control.
+
+No confirmed answer or validated remedy has been recorded.
+The logging requirement remains unresolved and deployed OAuth stays disabled.
