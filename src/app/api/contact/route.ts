@@ -15,10 +15,11 @@ export async function POST(req: Request) {
   const origin = req.headers.get("origin");
 
   try {
-    const apiKey = process.env.RESEND_API_KEY;
+    const apiKey = process.env.RESEND_API_KEY?.trim();
+    const contactEmail = process.env.CONTACT_EMAIL?.trim();
 
-    if (!apiKey) {
-      throw new Error("RESEND_API_KEY is not configured.");
+    if (!apiKey || !contactEmail) {
+      throw new Error("Contact delivery unavailable");
     }
 
     const resend = new Resend(apiKey);
@@ -37,9 +38,9 @@ export async function POST(req: Request) {
       );
     }
 
-    await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: "Portfolio Contact <onboarding@resend.dev>",
-      to: process.env.CONTACT_EMAIL!,
+      to: contactEmail,
 
       subject: `Portfolio Contact: ${subject}`,
 
@@ -65,6 +66,14 @@ ${message}
 `,
     });
 
+    if (
+      error ||
+      typeof data?.id !== "string" ||
+      data.id.trim().length === 0
+    ) {
+      throw new Error("Contact delivery unavailable");
+    }
+
     return NextResponse.json(
       {
         message: "Message received.",
@@ -73,8 +82,8 @@ ${message}
         headers: getCorsHeaders(origin),
       },
     );
-  } catch (error) {
-    console.error(error);
+  } catch {
+    console.error("Contact request failed");
 
     return NextResponse.json(
       {
