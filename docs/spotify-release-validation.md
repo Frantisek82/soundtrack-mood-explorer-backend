@@ -203,3 +203,17 @@ would provide that control.
 
 No confirmed answer or validated remedy has been recorded.
 The logging requirement remains unresolved and deployed OAuth stays disabled.
+
+## Spotify dashboard verification — 21 October 2026
+
+The maintainer confirms:
+- App status is Development Mode.
+- The app owner's Premium subscription is active.
+- The testing account is allowlisted.
+
+Saved dashboard settings show both redirect URIs:
+- https://soundtrack-mood-explorer-backend.vercel.app/api/spotify/callback
+- http://127.0.0.1:3000/api/spotify/callback
+
+This verifies callback registration, not successful deployed authorization.
+Deployed OAuth remains disabled while the logging blocker is unresolved.
