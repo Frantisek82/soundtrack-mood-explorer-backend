@@ -217,3 +217,21 @@ Saved dashboard settings show both redirect URIs:
 
 This verifies callback registration, not successful deployed authorization.
 Deployed OAuth remains disabled while the logging blocker is unresolved.
+
+## Production environment inventory — 21 October 2026
+
+The maintainer inspected Vercel's Production-scoped backend variables:
+- SPOTIFY_ENABLED is false.
+- SPOTIFY_CLIENT_ID is present.
+- SPOTIFY_TOKEN_ENCRYPTION_KEYS is present.
+- SPOTIFY_TOKEN_ACTIVE_KEY_ID is present.
+
+The following saved values differed and were corrected:
+- SPOTIFY_FRONTEND_ORIGIN:
+  https://soundtrack-mood-explorer-frontend.vercel.app
+- SPOTIFY_REDIRECT_URI:
+  https://soundtrack-mood-explorer-backend.vercel.app/api/spotify/callback
+
+This verifies saved configuration only. Active deployment values,
+encryption-key validity, indexes, and transaction readiness remain unverified.
+No secret values were recorded. Deployed OAuth remains disabled.
