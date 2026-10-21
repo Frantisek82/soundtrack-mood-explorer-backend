@@ -254,3 +254,19 @@ weakened, and no database or Spotify requests were made.
 
 Production configuration validity and active-deployment readiness remain
 unverified. Deployed OAuth remains disabled.
+
+## Production configuration verifier prepared — 21 October 2026
+
+Added scripts/verify-spotify-production-config.mjs.
+
+The script requires VERCEL_ENV=production and SPOTIFY_ENABLED=false.
+It validates an enabled copy of the configuration without changing the
+process environment. Output is a fixed PASS/FAIL message without secrets.
+
+It imports only the configuration parser and makes no database or
+Spotify requests. It is not attached to the build command.
+
+Validation passed: 34 targeted tests, ESLint, TypeScript, and whitespace
+checks. Script tests use isolated environments and fake credentials.
+
+Execution against actual Production settings remains pending.
