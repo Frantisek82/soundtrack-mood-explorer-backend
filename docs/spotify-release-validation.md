@@ -235,3 +235,22 @@ The following saved values differed and were corrected:
 This verifies saved configuration only. Active deployment values,
 encryption-key validity, indexes, and transaction readiness remain unverified.
 No secret values were recorded. Deployed OAuth remains disabled.
+
+## Production CLI verification limitation — 21 October 2026
+
+Vercel CLI 65.0.0 was authenticated and linked to the existing backend project.
+
+An initial env run loaded .env.local, so its output was unsuitable as
+evidence of saved Production configuration.
+
+A second attempt ran from an empty temporary directory with the Production
+environment, team scope, and project explicitly selected. The CLI reported
+that four Secret values could not be pulled. None of the six expected
+Spotify settings was available to the validation command.
+
+Result: CLI verification is inconclusive. This does not establish that
+saved Production configuration is invalid. Secret protections were not
+weakened, and no database or Spotify requests were made.
+
+Production configuration validity and active-deployment readiness remain
+unverified. Deployed OAuth remains disabled.
