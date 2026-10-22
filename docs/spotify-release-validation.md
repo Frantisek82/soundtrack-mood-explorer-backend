@@ -459,3 +459,22 @@ https://developer.spotify.com/policy
 This records a documentation review, not approval of the application or
 completion of its privacy/agreement review. Logging, retention/restore,
 and deployed/browser verification remain unresolved.
+
+## Callback contract and test-isolation review — 22 October 2026
+
+The redirect helper and backend documentation agree on the fixed
+/profile?spotify=<result> destination and six bounded results:
+connected, denied, invalid_transaction, session_expired,
+account_conflict, and provider_error.
+
+The main backend test harness creates a temporary MongoDB replica set.
+Cleanup requires NODE_ENV=test, a loopback MongoDB URI, the expected test
+database name, and a verified active connection. SRV URIs are rejected.
+Operational-script tests create their own separate temporary replica set.
+
+Reviewed Spotify HTTP boundaries use fetch mocks that reject unexpected
+requests. Contact tests mock Resend and forbid live fetch.
+Frontend Spotify service/component tests mock HTTP or service boundaries.
+
+Controlled Production probes were separate manual operations, not part
+of automated tests. No deployed OAuth verification is claimed.
