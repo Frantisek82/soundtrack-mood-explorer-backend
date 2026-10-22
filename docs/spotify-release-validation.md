@@ -396,3 +396,20 @@ of retention versus historical access after upgrading.
 
 Human confirmation remains pending. The logging exclusion requirement
 remains unresolved, and deployed OAuth remains disabled.
+
+## Full backend regression validation — 22 October 2026
+
+After adding the configuration verifier, database inspector, and guarded
+index provisioner, all backend checks passed:
+- 680 tests across 60 files.
+- ESLint.
+- TypeScript validation.
+- Production build.
+- Whitespace checks.
+
+Automated database-script tests use a dedicated temporary MongoDB replica
+set. Production inspection/provisioning was performed separately through
+the documented controlled builds.
+
+This validates the current backend branch. It does not complete deployed
+OAuth, browser verification, or the unresolved logging requirement.
