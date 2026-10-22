@@ -413,3 +413,17 @@ the documented controlled builds.
 
 This validates the current backend branch. It does not complete deployed
 OAuth, browser verification, or the unresolved logging requirement.
+
+## Full frontend regression validation — 22 October 2026
+
+Frontend dev, including the contact privacy-disclosure update, passed:
+- 223 tests across 22 suites.
+- ESLint.
+- TypeScript validation.
+- Production build.
+- Whitespace checks.
+
+The frontend working tree was clean and synchronized with origin/dev.
+These are local automated checks; deployed/browser verification and
+the final privacy/agreement enablement review remain pending.
+Frontend issue #44 remains open.
