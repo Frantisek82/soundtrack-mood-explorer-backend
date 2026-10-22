@@ -270,3 +270,33 @@ Validation passed: 34 targeted tests, ESLint, TypeScript, and whitespace
 checks. Script tests use isolated environments and fake credentials.
 
 Execution against actual Production settings remains pending.
+
+## Production configuration verified — 22 October 2026
+
+Correction to the 21 October inventory: subsequent CLI and dashboard
+inspection found no Spotify variables in the backend project's Production
+environment. The earlier saved-configuration claim was not substantiated.
+
+All six Spotify variables have now been added to backend Production.
+A separate 32-byte Production encryption key was generated and sent
+directly to Vercel as a Secret, with active key identifier prod1.
+Local development encryption settings were preserved.
+
+An isolated five-file Production validation build ran the repository's
+configuration parser and reported:
+"Spotify production configuration: PASS; OAuth remains disabled."
+
+This validates the configured client ID format, exact Production URL pair,
+keyring encoding/key length, active-key membership, and explicit disablement.
+It does not establish provider acceptance of the client ID.
+
+The build deliberately exited with status 1 after verification, preventing
+publication. No application routes were included, and the verifier made
+no database or Spotify requests. No secret values were printed.
+
+Evidence:
+https://vercel.com/frantisek-projects/soundtrack-mood-explorer-backend/E2ptnEWf3Cmvw9L5AcTfV6tm14po
+
+Active application deployment settings, MongoDB indexes and transaction
+readiness remain unverified. The callback-query logging blocker remains
+unresolved. Deployed OAuth remains disabled.
