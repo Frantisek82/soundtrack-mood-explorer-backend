@@ -300,3 +300,23 @@ https://vercel.com/frantisek-projects/soundtrack-mood-explorer-backend/E2ptnEWf3
 Active application deployment settings, MongoDB indexes and transaction
 readiness remain unverified. The callback-query logging blocker remains
 unresolved. Deployed OAuth remains disabled.
+
+## Read-only database probe prepared — 22 October 2026
+
+Added scripts/inspect-spotify-production-db.mjs.
+
+The probe requires Production, explicit OAuth disablement, and the
+soundtrack-explorer database target. It uses the MongoDB driver without
+importing application models or creating collections/indexes.
+
+It checks topology, required index metadata, and one transactional read.
+Execution has a 30-second overall budget and bounded driver operations.
+Output contains fixed check names/results, without raw errors or documents.
+
+Seven tests passed against a dedicated temporary MongoDB replica set.
+They cover missing indexes without collection creation, successful
+inspection without data/index changes, incorrect TTL preservation,
+environment guards, target rejection, and sanitized connection errors.
+ESLint, TypeScript, and whitespace checks also passed.
+
+Actual Production database inspection remains pending.
