@@ -377,3 +377,22 @@ Together with the successful configuration check, this completes the saved
 Production configuration, encryption-format, index, and transaction-support
 prerequisite. It does not verify the active application deployment or live
 Spotify authorization. The callback logging blocker remains unresolved.
+
+## Vercel support follow-up — 22 October 2026
+
+The Vercel Support Agent reported that query-parameter redaction before
+Runtime Logs ingestion/storage is unsupported across all plans.
+
+This is an AI Agent response, not human-reviewed confirmation.
+Its permanent-deletion explanation has not been independently verified.
+
+The support-case form required a paid account for dedicated
+Observability > Logs support and directed Hobby users to Community.
+No support case was submitted.
+
+The maintainer posted a follow-up in the existing Community thread,
+requesting staff confirmation of redaction availability and clarification
+of retention versus historical access after upgrading.
+
+Human confirmation remains pending. The logging exclusion requirement
+remains unresolved, and deployed OAuth remains disabled.
