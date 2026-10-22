@@ -349,3 +349,31 @@ can leave some indexes provisioned; inspection is required after failure.
 
 Twelve isolated database tests, lint, TypeScript, and whitespace checks
 passed. Production provisioning remains pending.
+
+## Production indexes provisioned and verified — 22 October 2026
+
+Guarded provisioning created the two Spotify collections and five required
+indexes. Both collections remained empty.
+
+Provisioning and a separate read-only verification both confirmed:
+- Production database target and connectivity.
+- Supported transaction topology.
+- Unique connection indexes on userId and accountId.
+- Unique OAuth transaction index on stateHash.
+- OAuth transaction cleanup index on userId.
+- OAuth transaction expiresAt TTL index with expireAfterSeconds=0.
+- Successful transactional read.
+
+The collections have three and four indexes respectively, including their
+default _id indexes. No application records were inserted.
+
+The build deliberately stopped after verification, preventing publication.
+OAuth remained explicitly disabled.
+
+Evidence:
+https://vercel.com/frantisek-projects/soundtrack-mood-explorer-backend/EiKSdNK83tE4xso8ri5mYBtYfBhh
+
+Together with the successful configuration check, this completes the saved
+Production configuration, encryption-format, index, and transaction-support
+prerequisite. It does not verify the active application deployment or live
+Spotify authorization. The callback logging blocker remains unresolved.
