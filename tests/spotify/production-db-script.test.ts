@@ -16,7 +16,7 @@ let replicaSet: MongoMemoryReplSet;
 let client: InstanceType<typeof MongoClient>;
 let uri: string;
 
-function run(overrides: Record<string, string | undefined> = {}) {
+function run(overrides: Record<string, string | undefined> = {}, provision = false) {
   return new Promise<{
     status: number | string;
     stdout: string;
@@ -24,7 +24,9 @@ function run(overrides: Record<string, string | undefined> = {}) {
   }>(resolveResult => {
     execFile(
       process.execPath,
-      [resolve("scripts/inspect-spotify-production-db.mjs")],
+      [resolve(provision
+        ? "scripts/provision-spotify-production-db.mjs"
+        : "scripts/inspect-spotify-production-db.mjs")],
       {
         timeout: 15_000,
         maxBuffer: 64 * 1024,
@@ -32,6 +34,7 @@ function run(overrides: Record<string, string | undefined> = {}) {
           NODE_ENV: "test",
           VERCEL_ENV: "production",
           SPOTIFY_ENABLED: "false",
+          SPOTIFY_PROVISION_EMPTY_COLLECTIONS: provision ? "true" : "false",
           MONGODB_URI: uri,
           ...overrides,
         },
@@ -166,4 +169,67 @@ describe("Read-only Production database inspection script", () => {
     expect(result.stderr).toContain("details withheld");
     expect(result.stdout + result.stderr).not.toContain(privateValue);
   });
+
+  it("requires explicit provisioning opt-in", async () => {
+    const result = await run({
+      SPOTIFY_PROVISION_EMPTY_COLLECTIONS: "false",
+    }, true);
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(
+      await client.db("soundtrack-explorer").listCollections().toArray(),
+    ).toEqual([]);
+  });
+
+  it("provisions missing collections and verifies all required indexes", async () => {
+    const result = await run({}, true);
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(result.stdout).not.toContain("FAIL");
+    expect(result.stdout).toContain("Transactional read: PASS");
+
+    const database = client.db("soundtrack-explorer");
+    expect(await database.collection("spotifyconnections").countDocuments()).toBe(0);
+    expect(await database.collection("spotifyoauthtransactions").countDocuments()).toBe(0);
+
+    const verification = await run();
+    expect(verification.status).toBe(0);
+    expect(verification.stdout).not.toContain("FAIL");
+  });
+
+  it.each(["spotifyconnections", "spotifyoauthtransactions"])(
+    "refuses provisioning when %s contains records",
+    async name => {
+      const database = client.db("soundtrack-explorer");
+      await database.collection(name).insertOne({ sentinel: "test-only" });
+      const before = await database.listCollections().toArray();
+      const indexesBefore = await database.collection(name).listIndexes().toArray();
+
+      const result = await run({}, true);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("FAIL during empty-collection preflight");
+      expect(await database.listCollections().toArray()).toEqual(before);
+      expect(await database.collection(name).listIndexes().toArray()).toEqual(indexesBefore);
+      expect(await database.collection(name).countDocuments()).toBe(1);
+    },
+  );
+
+  it("allows repeated provisioning of empty collections without index changes", async () => {
+    await createIndexes();
+    const database = client.db("soundtrack-explorer");
+    const before = await database.collection("spotifyconnections").listIndexes().toArray();
+    const transactionsBefore = await database
+      .collection("spotifyoauthtransactions").listIndexes().toArray();
+
+    const result = await run({}, true);
+
+    expect(result.status).toBe(0);
+    expect(await database.collection("spotifyconnections").listIndexes().toArray()).toEqual(before);
+    expect(await database.collection("spotifyoauthtransactions").listIndexes().toArray())
+      .toEqual(transactionsBefore);
+  });
+
 });

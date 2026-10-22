@@ -75,10 +75,22 @@ try {
   stage = "index inspection";
   async function indexesFor(name) {
     try {
-      return await database.collection(name)
+      const collection = database.collection(name);
+      const indexes = await collection
         .listIndexes({ maxTimeMS: 5000 }).toArray();
+      const record = await collection.findOne(
+        {},
+        { projection: { _id: 1 }, maxTimeMS: 5000 },
+      );
+      console.log(
+        `${name}: ${record ? "contains records" : "empty"}; ${indexes.length} indexes`,
+      );
+      return indexes;
     } catch (error) {
-      if (error?.code === 26) return [];
+      if (error?.code === 26) {
+        console.log(`${name}: collection not present`);
+        return [];
+      }
       throw error;
     }
   }

@@ -320,3 +320,32 @@ environment guards, target rejection, and sanitized connection errors.
 ESLint, TypeScript, and whitespace checks also passed.
 
 Actual Production database inspection remains pending.
+
+## Production database inspection — 22 October 2026
+
+The read-only Production probe verified the database target, connectivity,
+transaction topology, and a transactional read.
+
+Both spotifyconnections and spotifyoauthtransactions were absent.
+Consequently, all five required index checks failed. The probe created
+no collections or indexes and changed no application records.
+
+Evidence:
+https://vercel.com/frantisek-projects/soundtrack-mood-explorer-backend/5yLrNuNTAQGZ6TCGM9RoqxDR7Cdb
+
+## Index provisioning prepared — 22 October 2026
+
+Prepared an explicit provisioning script requiring Production, OAuth
+disabled, the expected database, and a separate provisioning opt-in.
+It checks both Spotify collections before creating indexes and refuses
+if either contains records.
+
+The script creates the five schema-declared indexes, then checks index
+metadata and transactional reads. It does not insert application records
+or drop/replace existing indexes.
+
+Index creation is not atomic across the two collections. A failed attempt
+can leave some indexes provisioned; inspection is required after failure.
+
+Twelve isolated database tests, lint, TypeScript, and whitespace checks
+passed. Production provisioning remains pending.
