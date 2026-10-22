@@ -427,3 +427,35 @@ The frontend working tree was clean and synchronized with origin/dev.
 These are local automated checks; deployed/browser verification and
 the final privacy/agreement enablement review remain pending.
 Frontend issue #44 remains open.
+
+## Official Spotify requirements rechecked — 22 October 2026
+
+Reviewed current official documentation for this account-linking milestone:
+
+- Development Mode requires a Premium app owner and permits up to five
+  authenticated, allowlisted users.
+- Development Mode quotas are shared across the developer account's apps.
+  The increased limit of 25 Client IDs does not mean 25 authorized users.
+- Production redirect URIs require HTTPS and exact matching. Explicit
+  loopback addresses may use HTTP; localhost is not permitted.
+- Authorization Code with PKCE uses S256.
+- Refresh tokens have a documented six-month lifetime beginning at user
+  authorization. Access-token refresh does not extend that lifetime.
+  expires_in describes access-token lifetime.
+- Preserve the existing refresh token if a successful refresh omits one.
+  invalid_grant requires discarding the unusable token and reauthorization.
+- Developer Terms and Policy require user disclosures, an end-user
+  agreement, accessible disconnect controls, and appropriate data handling.
+
+Sources:
+https://developer.spotify.com/documentation/web-api/concepts/quota-modes
+https://developer.spotify.com/blog/2026-07-23-web-api-quota-updates
+https://developer.spotify.com/documentation/web-api/concepts/redirect_uri
+https://developer.spotify.com/documentation/web-api/tutorials/code-pkce-flow
+https://developer.spotify.com/documentation/web-api/tutorials/refreshing-tokens
+https://developer.spotify.com/terms
+https://developer.spotify.com/policy
+
+This records a documentation review, not approval of the application or
+completion of its privacy/agreement review. Logging, retention/restore,
+and deployed/browser verification remain unresolved.
