@@ -164,7 +164,7 @@ Environment variables required:
 
 ## Spotify OAuth foundation
 
-The backend includes Spotify account linking, encrypted persistence, coordinated token refresh, database-only connection status, disconnect, and transactional Spotify cleanup during account deletion. Frontend controls and production verification remain pending. Account deletion also removes owned custom Playlists (#45), preserving other users' data and the shared Soundtrack catalogue.
+The backend includes Spotify account linking, encrypted persistence, coordinated token refresh, database-only connection status, disconnect, and transactional Spotify cleanup during account deletion. Frontend controls and notices are implemented and locally tested. Deployed browser verification and final privacy review remain pending; deployed OAuth stays disabled while platform callback logging is unresolved. Account deletion also removes owned custom Playlists (#45), preserving other users' data and the shared Soundtrack catalogue.
 
 See [account linking](docs/spotify-account-linking.md), [refresh and status](docs/spotify-refresh-status.md), [disconnect and deletion](docs/spotify-disconnect-deletion.md), [configuration](docs/spotify-configuration.md), [encrypted persistence](docs/spotify-persistence.md), and [architecture](docs/spotify-oauth-plan.md).
 
