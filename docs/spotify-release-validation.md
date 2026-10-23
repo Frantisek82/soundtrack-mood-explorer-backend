@@ -478,3 +478,18 @@ Frontend Spotify service/component tests mock HTTP or service boundaries.
 
 Controlled Production probes were separate manual operations, not part
 of automated tests. No deployed OAuth verification is claimed.
+
+
+## Historical snapshot search — 23 October 2026
+
+The maintainer reports being unable to locate the manual snapshot
+described in the 5 October roadmap record.
+
+Its current existence, location, and deletion status remain unverified.
+Failure to locate it is not evidence of deletion.
+
+The 16 October screenshots document development database-user setup;
+they do not identify the historical snapshot.
+
+Backup/deletion and restore review remains incomplete. No backup was
+deleted or restored during this search. Other validation work can proceed.
