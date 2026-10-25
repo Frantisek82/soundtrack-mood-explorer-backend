@@ -3,6 +3,7 @@
 Status: DRAFT — procedure not yet validated.
 Last updated: 25 October 2026.
 Tracking: backend #40.
+Deletion-history and recovery implementation: backend #51.
 
 This is a project recovery procedure, not evidence that a restore is safe
 or that deletion obligations have been completed. No Production restore
