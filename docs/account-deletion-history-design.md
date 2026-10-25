@@ -26,7 +26,8 @@ snapshot remains unresolved.
 ## 2. Independent storage
 
 Proposed location: a dedicated Atlas project and cluster outside the
-application database and VM restore boundary. Not yet provisioned.
+application database and VM restore boundary. The separate project has
+been created; no cluster or deletion register has been provisioned.
 
 Use a separate database connection and credentials. Never bind register
 models to the application's default Mongoose connection or include the
@@ -238,3 +239,30 @@ with safe validation configuration, and git diff --check after implementation.
 
 This proposal does not complete #51, #40, the unknown-copy investigation,
 the callback logging gate, or the v2.2.0 release.
+
+## 12. Atlas inspection — 25–26 October 2026
+
+Manual dashboard inspection by the maintainer established:
+
+- Created the separate Soundtrack Mood Explorer Deletion History project.
+- Its deployment form offered the Free tier at $0/hour.
+- No cluster was deployed and no database user or custom role was created.
+- The custom-role form supports named database and collection resources.
+- Individual find, insert, and update actions were visible and selectable.
+- These are UI observations, not verified permission enforcement.
+- The empty project's Backup page contained no cluster entries.
+- The existing application project's Backup page offered cluster upgrades
+  for daily or continuous backups and displayed general pricing examples.
+- No Free-cluster backup subscription or account-specific price was verified.
+- No backup, network, or application configuration was changed.
+
+The dedicated cluster remains a candidate, not an operationally accepted
+deletion-history store. Register recovery, complete history coverage,
+permission enforcement, and key custody remain unresolved.
+
+A register snapshot can omit obligations accepted after its capture.
+If register recovery loses such history, application recovery must remain
+quarantined until the missing obligations are independently reconciled.
+Replication or a successful snapshot restore alone does not prove coverage.
+
+PRs #50 and #52 remain draft. Deployed Spotify OAuth remains disabled.
