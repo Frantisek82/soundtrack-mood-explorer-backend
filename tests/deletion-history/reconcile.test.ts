@@ -7,6 +7,7 @@ import { openDeletionHistoryDatabase } from "@/lib/deletion-history/client";
 import { getDeletionIdentityConfig } from "@/lib/deletion-history/config";
 import { createDeletionIdentifier } from "@/lib/deletion-history/identifier";
 import { reconcileDeletionCandidate } from "@/lib/deletion-history/reconcile";
+import { runDeletionReconciliation } from "@/lib/deletion-history/reconcile-run";
 import { createDeletionIntentStore } from "@/lib/deletion-history/store";
 import Favorite from "@/models/Favorite";
 import Playlist from "@/models/Playlist";
@@ -204,4 +205,88 @@ describe("Accepted deletion candidate reconciliation", () => {
       .rejects.toThrow("Deletion reconciliation incomplete");
     await expectPreserved(userId);
   });
+
+  function runInput() {
+    return {
+      expectedDatabaseName: "soundtrack-mood-explorer-test",
+      expectedNamespace: "synthetic-test",
+      confirmation: "reconcile-accepted-account-deletions",
+    };
+  }
+
+  it("runs enumeration and reconciliation while preserving an unrelated account", async () => {
+    const userId = await fixture();
+    const reference = await record(userId);
+    const retained = await User.create({
+      name: "Retained Synthetic User",
+      email: "retained-reconciliation@example.com",
+      password: "test-only-password",
+    });
+    const retainedBefore = await User.collection.findOne({ _id: retained._id });
+
+    await expect(runDeletionReconciliation(runInput())).resolves.toEqual({
+      candidateCount: 2,
+      matchedAccounts: 1,
+      completedObligations: 1,
+    });
+
+    await expectAbsent(userId);
+    expect(await User.collection.findOne({ _id: retained._id }))
+      .toEqual(retainedBefore);
+    expect((await createDeletionIntentStore(register.database)
+      .findExisting(reference))?.state).toBe("completed");
+
+    await expect(runDeletionReconciliation(runInput())).resolves.toEqual({
+      candidateCount: 1,
+      matchedAccounts: 0,
+      completedObligations: 0,
+    });
+  });
+
+  it("rejects malformed ownership during preflight before any account cleanup", async () => {
+    const userId = await fixture();
+    const reference = await record(userId);
+    await Favorite.collection.insertOne({
+      userId: "synthetic-malformed-owner",
+      soundtrackId: new Types.ObjectId(),
+    });
+
+    await expect(runDeletionReconciliation(runInput()))
+      .rejects.toThrow("Deletion reconciliation run incomplete; review and retry");
+
+    await expectPreserved(userId);
+    expect((await createDeletionIntentStore(register.database)
+      .findExisting(reference))?.state).toBe("pending");
+  });
+
+  it("resumes after completion recording fails following committed cleanup", async () => {
+    const userId = await fixture();
+    const reference = await record(userId);
+    const store = createDeletionIntentStore(register.database);
+    const pending = await store.findExisting(reference);
+
+    // Register completion uses the driver's updateOne; generation fencing uses
+    // findOneAndUpdate, so this failure occurs after application cleanup commits.
+    const mongooseModule = await import("mongoose");
+    const marker = vi.spyOn(mongooseModule.default.mongo.Collection.prototype, "updateOne")
+      .mockRejectedValueOnce(new Error("synthetic-private-marker-failure"));
+
+    await expect(runDeletionReconciliation(runInput()))
+      .rejects.toThrow("Deletion reconciliation run incomplete; review and retry");
+    marker.mockRestore();
+
+    await expectAbsent(userId);
+    expect((await store.findExisting(reference))?.state).toBe("pending");
+    expect((await store.findExisting(reference))?.acceptedAt)
+      .toEqual(pending?.acceptedAt);
+
+    // With no User or owner records left, enumeration cannot reverse the digest.
+    // The candidate operation can still finish when a trusted candidate ID exists.
+    await expect(reconcileDeletionCandidate(userId)).resolves.toEqual({
+      matched: true,
+      completedObligations: 1,
+    });
+    expect((await store.findExisting(reference))?.state).toBe("completed");
+  });
+
 });
