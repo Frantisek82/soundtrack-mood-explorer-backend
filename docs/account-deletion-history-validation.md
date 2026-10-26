@@ -65,7 +65,7 @@ Repeating replay safely finishes remaining work.
 - All 7 replay tests subsequently passed, including partial failure and resume.
 - All 3 session signing-secret rotation tests passed.
 - TypeScript, ESLint, and whitespace checks passed for those changes.
-- Updated full-suite evidence is recorded below; safe production build validation remains pending.
+- Updated full-suite evidence is recorded below; production build validation is recorded below.
 
 Tests use temporary transaction-capable MongoDB replica sets and synthetic
 records. Provider HTTP is mocked/rejected in the recovery replay tests.
@@ -179,4 +179,10 @@ Full backend validation on 27 October 2026 passed:
 
 The enumeration fixture supplies distinct synthetic accountId/stateHash values
 so it remains compatible with unique indexes retained across test files.
-Safe production build validation remains pending.
+Production build validation passed on 27 October 2026 with Next.js 16.3.6.
+The command supplied the CI loopback MongoDB URI and placeholder JWT secret,
+disabled Spotify, and supplied empty register and contact-provider settings.
+Next.js reported loading .env.local; the listed command values override those
+settings, but this was not a fully isolated environment build.
+Compilation, TypeScript, page-data collection, and static generation passed.
+No deployment or operator reconciliation command was run.
