@@ -78,6 +78,18 @@ export function createDeletionIntentStore(database: Database) {
   }
 
   return {
+    async findExisting(
+      reference: DeletionReference,
+    ): Promise<DeletionIntent | null> {
+      const id = recordId(reference);
+      try {
+        const value = await records.findOne({ _id: id });
+        return value === null ? null : validate(value, reference, id);
+      } catch {
+        throw new DeletionHistoryStorageError();
+      }
+    },
+
     async recordPending(reference: DeletionReference): Promise<DeletionIntent> {
       const id = recordId(reference);
       const record: DeletionIntent = {
