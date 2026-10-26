@@ -1,3 +1,4 @@
+import { executeRecordedAccountDeletion } from "./deletion-history/execute";
 import { abortSpotifyOperationsBeforeGeneration } from "./spotify/operations";
 import { Types } from "mongoose";
 
@@ -14,6 +15,13 @@ import {
 // No Spotify configuration or provider request is needed to delete an account.
 // Cookie cleanup belongs to the route and occurs only after this commits.
 export async function deleteApplicationAccount(userId: string): Promise<number> {
+  return executeRecordedAccountDeletion(
+    userId,
+    () => cleanupApplicationAccount(userId),
+  );
+}
+
+async function cleanupApplicationAccount(userId: string): Promise<number> {
   const completed = await invalidateSpotifyLinkGeneration(
     userId,
     async session => {

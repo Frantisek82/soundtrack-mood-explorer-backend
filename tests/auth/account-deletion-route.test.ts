@@ -1,3 +1,6 @@
+import { openDeletionHistoryDatabase } from "@/lib/deletion-history/client";
+import * as intentStoreModule from "@/lib/deletion-history/store";
+
 import jwt from "jsonwebtoken";
 import { Types } from "mongoose";
 import {
@@ -272,4 +275,122 @@ describe("Account-deletion route with Spotify cleanup", () => {
     await expect(SpotifyConnection.countDocuments({ userId })).resolves.toBe(1);
     await expect(SpotifyOAuthTransaction.countDocuments({ userId })).resolves.toBe(2);
   });
+
+  async function readIntents() {
+    const handle = await openDeletionHistoryDatabase();
+    try {
+      return await handle.database
+        .collection("accountdeletionintents")
+        .find({})
+        .toArray();
+    } finally {
+      await handle.close();
+    }
+  }
+
+  it("persists a completed deletion obligation independently of live cleanup", async () => {
+    const { userId } = await fixture();
+    const response = await DELETE(request());
+
+    expect(response.status).toBe(200);
+    await expect(User.findById(userId)).resolves.toBeNull();
+
+    const intents = await readIntents();
+    expect(intents).toHaveLength(1);
+    expect(intents[0]).toMatchObject({
+      namespace: "synthetic-test",
+      keyVersion: "test-v1",
+      schemaVersion: 1,
+      state: "completed",
+    });
+    expect(intents[0].digest).toMatch(/^[a-f0-9]{64}$/);
+    expect(intents[0].acceptedAt).toBeInstanceOf(Date);
+    expect(intents[0].completedAt).toBeInstanceOf(Date);
+    expect(JSON.stringify(intents)).not.toContain(userId);
+    expect(await User.db.db!.collection("accountdeletionintents").countDocuments())
+      .toBe(0);
+  });
+
+  it("keeps pending intent after rollback and completes that same intent on retry", async () => {
+    const { userId } = await fixture();
+    vi.spyOn(User, "deleteOne").mockImplementationOnce(() => {
+      throw new Error("synthetic-cleanup-failure");
+    });
+
+    const failed = await DELETE(request());
+    expect(failed.status).toBe(500);
+    expect(failed.headers.has("set-cookie")).toBe(false);
+    await expect(User.findById(userId)).resolves.not.toBeNull();
+    await expect(Favorite.countDocuments({ userId })).resolves.toBe(1);
+    await expect(SpotifyConnection.countDocuments({ userId })).resolves.toBe(1);
+    await expect(SpotifyOAuthTransaction.countDocuments({ userId })).resolves.toBe(2);
+
+    const pending = await readIntents();
+    expect(pending).toHaveLength(1);
+    expect(pending[0].state).toBe("pending");
+    expect(pending[0].completedAt).toBeUndefined();
+
+    const retried = await DELETE(request());
+    expect(retried.status).toBe(200);
+    const completed = await readIntents();
+    expect(completed).toHaveLength(1);
+    expect(completed[0]._id).toEqual(pending[0]._id);
+    expect(completed[0].acceptedAt).toEqual(pending[0].acceptedAt);
+    expect(completed[0].state).toBe("completed");
+  });
+
+  it("blocks cleanup when register configuration is unavailable", async () => {
+    const { userId } = await fixture();
+    vi.stubEnv("DELETION_HISTORY_MONGODB_URI", "");
+    const deletion = vi.spyOn(User, "deleteOne");
+
+    const response = await DELETE(request());
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      message: "Internal server error",
+    });
+    expect(response.headers.has("set-cookie")).toBe(false);
+    expect(deletion).not.toHaveBeenCalled();
+    await expect(User.findById(userId)).resolves.not.toBeNull();
+    await expect(Favorite.countDocuments({ userId })).resolves.toBe(1);
+    await expect(SpotifyConnection.countDocuments({ userId })).resolves.toBe(1);
+    await expect(SpotifyOAuthTransaction.countDocuments({ userId })).resolves.toBe(2);
+  });
+
+  it("preserves success and cookie cleanup when completion recording fails after commit", async () => {
+    const { userId } = await fixture();
+    const realFactory = intentStoreModule.createDeletionIntentStore;
+    vi.spyOn(intentStoreModule, "createDeletionIntentStore")
+      .mockImplementation(database => ({
+        ...realFactory(database),
+        markLiveCleanupCompleted: async () => {
+          throw new Error("synthetic-private-marker-failure");
+        },
+      }));
+
+    const response = await DELETE(request());
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      message: "Account deleted successfully",
+    });
+    expect(response.cookies.get("token")?.value).toBe("");
+    expect(response.cookies.get("spotify_oauth")?.value).toBe("");
+    await expect(User.findById(userId)).resolves.toBeNull();
+    await expect(Favorite.countDocuments({ userId })).resolves.toBe(0);
+    await expect(SpotifyConnection.countDocuments({ userId })).resolves.toBe(0);
+    await expect(SpotifyOAuthTransaction.countDocuments({ userId })).resolves.toBe(0);
+
+    const intents = await readIntents();
+    expect(intents).toHaveLength(1);
+    expect(intents[0].state).toBe("pending");
+  });
+
+  it("does not record deletion intent for unauthenticated requests", async () => {
+    const response = await DELETE(request());
+
+    expect(response.status).toBe(401);
+    expect(response.headers.has("set-cookie")).toBe(false);
+    expect(await readIntents()).toHaveLength(0);
+  });
+
 });
