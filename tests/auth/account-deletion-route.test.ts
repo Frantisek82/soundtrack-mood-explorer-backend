@@ -345,9 +345,9 @@ describe("Account-deletion route with Spotify cleanup", () => {
     const deletion = vi.spyOn(User, "deleteOne");
 
     const response = await DELETE(request());
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(503);
     await expect(response.json()).resolves.toEqual({
-      message: "Internal server error",
+      message: "Account deletion temporarily unavailable",
     });
     expect(response.headers.has("set-cookie")).toBe(false);
     expect(deletion).not.toHaveBeenCalled();
