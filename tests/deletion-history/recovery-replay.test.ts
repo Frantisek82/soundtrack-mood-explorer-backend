@@ -230,4 +230,69 @@ describe("Synthetic quarantined recovery replay", () => {
       .rejects.toThrow("Recovery replay failed; target remains quarantined");
     expect(await snapshot()).toEqual(before);
   });
+
+  it("resumes safely after a later account transaction fails", async () => {
+    const data = await fixture();
+    const history = await register.database.collection("accountdeletionintents")
+      .find({}).sort({ _id: 1 }).toArray();
+    const originalDelete = mongoose.mongo.Collection.prototype.deleteOne;
+    const deletion = vi.spyOn(mongoose.mongo.Collection.prototype, "deleteOne")
+      .mockImplementationOnce(function (
+        this: mongoose.mongo.Collection,
+        ...args
+      ) {
+        return Reflect.apply(originalDelete, this, args);
+      })
+      .mockRejectedValueOnce(new Error("synthetic-second-account-failure"));
+
+    await expect(replaySyntheticRecovery(evidence(), environment()))
+      .rejects.toThrow("Recovery replay failed; target remains quarantined");
+    expect(deletion).toHaveBeenCalledTimes(2);
+    deletion.mockRestore();
+
+    const owners = [data.deleted, data.orphan];
+    expect(await recovery.database.collection("favorites").countDocuments({
+      userId: { $in: owners },
+    })).toBe(1);
+    expect(await recovery.database.collection("playlists").countDocuments({
+      userId: { $in: owners },
+    })).toBe(1);
+    expect(await recovery.database.collection("users").countDocuments({
+      _id: data.retained,
+    })).toBe(1);
+
+    // Global Spotify sanitization has not run after this account-batch failure.
+    expect(await recovery.database.collection("spotifyconnections")
+      .countDocuments()).toBe(3);
+    expect(await recovery.database.collection("spotifyoauthtransactions")
+      .countDocuments()).toBe(3);
+
+    const resumed = await replaySyntheticRecovery(evidence(), environment());
+    expect(resumed).toEqual({
+      quarantined: true,
+      processedAccounts: 1,
+      spotifySanitized: true,
+    });
+    expect(await recovery.database.collection("favorites").countDocuments({
+      userId: { $in: owners },
+    })).toBe(0);
+    expect(await recovery.database.collection("playlists").countDocuments({
+      userId: { $in: owners },
+    })).toBe(0);
+    expect(await recovery.database.collection("users").countDocuments({
+      _id: { $in: owners },
+    })).toBe(0);
+    expect(await recovery.database.collection("favorites").countDocuments({
+      userId: data.retained,
+    })).toBe(1);
+    expect(await recovery.database.collection("playlists").countDocuments({
+      userId: data.retained,
+    })).toBe(1);
+    expect(await recovery.database.collection("soundtracks").countDocuments({
+      _id: data.track,
+    })).toBe(1);
+    expect(await register.database.collection("accountdeletionintents")
+      .find({}).sort({ _id: 1 }).toArray()).toEqual(history);
+  });
+
 });
