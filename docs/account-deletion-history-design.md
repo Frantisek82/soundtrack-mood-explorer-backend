@@ -1,6 +1,6 @@
 # Account deletion history and recovery design
 
-Status: PROPOSED — not implemented or operationally validated.
+Status: PARTIALLY IMPLEMENTED — application recording and synthetic recovery are implemented; operational deployment and release validation remain incomplete.
 Tracking: backend #51; release gates: backend #40.
 Related restore runbook: pending draft PR #50.
 
