@@ -1,7 +1,7 @@
 # Account deletion history — implementation and validation
 
 Status: IN PROGRESS.
-Evidence date: 26 October 2026.
+Evidence updated: 27 October 2026.
 Tracking: backend #51; release gates: backend #40.
 Related draft PRs: #50 and #52.
 
@@ -65,7 +65,7 @@ Repeating replay safely finishes remaining work.
 - All 7 replay tests subsequently passed, including partial failure and resume.
 - All 3 session signing-secret rotation tests passed.
 - TypeScript, ESLint, and whitespace checks passed for those changes.
-- A fresh full-suite run and safe production build remain pending.
+- Updated full-suite evidence is recorded below; safe production build validation remains pending.
 
 Tests use temporary transaction-capable MongoDB replica sets and synthetic
 records. Provider HTTP is mocked/rejected in the recovery replay tests.
@@ -99,9 +99,10 @@ No live signing secret has been changed by this implementation.
 
 ## Remaining work before reliance or release
 
-- Implement and test explicit live pending-intent reconciliation, preserving
-  generation fencing and post-commit cancellation for existing Users.
-- Test retryable transaction behavior and uncertain acknowledgement/commit cases.
+- Complete a supported operator launcher and operational target verification
+  for the implemented reconciliation runner.
+- Validate deployment-specific failure behavior; isolated uncertainty tests
+  simulate service-boundary failures, not actual network partitions or failover.
 - Verify independent register storage, least-privilege permission enforcement,
   backup/recovery, complete-history evidence, and required key custody.
 - Define reconciliation ownership, cadence, escalation, and monitoring.
@@ -117,3 +118,65 @@ No live signing secret has been changed by this implementation.
 
 The synthetic recovery helpers are not a supported Production restore command.
 Issue #51 and the v2.2.0 milestone remain open.
+
+## Reconciliation and uncertainty evidence — 27 October 2026
+
+Implemented internal candidate reconciliation and an explicitly invoked runner.
+No public endpoint, startup hook, background worker, or timer was added.
+
+Read-only enumeration collects distinct User IDs and owner references from
+Users, Favorites, Playlists, Spotify connections, and OAuth transactions.
+It validates identifiers before candidate cleanup begins and checks the
+expected database name and dataset namespace.
+
+Present Users use generation-fenced transactional cleanup and post-commit
+local cancellation. Missing Users use transactional orphan cleanup with an
+in-transaction absence check. Invalid counters on a present User are rejected.
+
+Reconciliation matches existing obligations across configured identifier keys,
+does not insert intent, and verifies scoped record absence before completion
+marking. Completed obligations are also enforced. The runner returns aggregate
+counts and stops on the first failure without claiming earlier commits rolled back.
+
+Recorded focused validation:
+- 22 deletion-route tests passed, including transaction callback retry,
+  lost intent acknowledgement, and an uncertain committed outcome.
+- 16 account-deletion service tests passed.
+- 10 read-only candidate enumeration tests passed.
+- 11 candidate/persistence-backed reconciliation tests passed.
+- 8 runner boundary tests passed.
+- TypeScript, ESLint, and whitespace checks passed for these changes.
+
+The uncertainty tests inject failures at service boundaries. They do not
+reproduce an actual MongoDB failover or network partition.
+
+### Pending markers without candidate records
+
+If cleanup commits but completion marking fails, all User and owner records
+may already be absent. HMAC digests cannot be reversed, so enumeration cannot
+recover that candidate ID. The pending obligation remains retained and applies
+to recovery replay.
+
+A trusted candidate ID permits explicit reconciliation and verification.
+Without it, do not infer completion or delete the obligation. Runner success
+means its enumerated candidates were processed; it does not establish that
+every pending register record was matched or completed.
+
+### Operational limits
+
+The runner is an internal callable function, not yet a supported command-line
+tool. Database-name and namespace checks do not independently prove cluster
+identity, writer isolation, or complete history coverage.
+
+No live register was provisioned or reconciled. Operational permissions,
+key custody, retention, reconciliation ownership/cadence, monitoring, and
+the supported launcher remain unresolved.
+
+Full backend validation on 27 October 2026 passed:
+- 845 tests across 72 files.
+- Standalone TypeScript validation.
+- ESLint and whitespace checks.
+
+The enumeration fixture supplies distinct synthetic accountId/stateHash values
+so it remains compatible with unique indexes retained across test files.
+Safe production build validation remains pending.

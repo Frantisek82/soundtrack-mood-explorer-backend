@@ -35,10 +35,17 @@ describe("Read-only deletion candidate enumeration", () => {
       "favorites", "playlists",
       "spotifyconnections", "spotifyoauthtransactions",
     ].entries()) {
-      await database.collection(name).insertMany([
-        { userId: owners[0] },
-        { userId: owners[index + 1] },
-      ]);
+      await database.collection(name).insertMany(
+        [owners[0], owners[index + 1]].map((userId, position) => ({
+          userId,
+          ...(name === "spotifyconnections"
+            ? { accountId: `synthetic-enumeration-${position}` }
+            : {}),
+          ...(name === "spotifyoauthtransactions"
+            ? { stateHash: String(position + 1).repeat(64) }
+            : {}),
+        })),
+      );
     }
     const before = await snapshot();
 
