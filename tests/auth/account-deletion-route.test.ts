@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+import { DeletionHistoryStorageError } from "@/lib/deletion-history/client";
 import { openDeletionHistoryDatabase } from "@/lib/deletion-history/client";
 import * as intentStoreModule from "@/lib/deletion-history/store";
 
@@ -391,6 +393,94 @@ describe("Account-deletion route with Spotify cleanup", () => {
     expect(response.status).toBe(401);
     expect(response.headers.has("set-cookie")).toBe(false);
     expect(await readIntents()).toHaveLength(0);
+  });
+
+
+  it("records intent once when the application transaction callback retries", async () => {
+    const { userId } = await fixture();
+    const factory = vi.spyOn(intentStoreModule, "createDeletionIntentStore");
+    const transient = new mongoose.mongo.MongoServerError({
+      message: "synthetic-transient-transaction-failure",
+      errorLabels: ["TransientTransactionError"],
+    });
+    const deletion = vi.spyOn(User, "deleteOne")
+      .mockImplementationOnce(() => { throw transient; });
+
+    const response = await DELETE(request());
+
+    expect(response.status).toBe(200);
+    expect(deletion.mock.calls.length).toBeGreaterThanOrEqual(2);
+    expect(factory).toHaveBeenCalledOnce();
+    await expect(User.findById(userId)).resolves.toBeNull();
+    const intents = await readIntents();
+    expect(intents).toHaveLength(1);
+    expect(intents[0].state).toBe("completed");
+  });
+
+  it("retains stored intent but blocks cleanup after a lost acknowledgement", async () => {
+    const { userId } = await fixture();
+    const realFactory = intentStoreModule.createDeletionIntentStore;
+    const factory = vi.spyOn(intentStoreModule, "createDeletionIntentStore")
+      .mockImplementation(database => {
+        const realStore = realFactory(database);
+        return {
+          ...realStore,
+          recordPending: async reference => {
+            await realStore.recordPending(reference);
+            throw new DeletionHistoryStorageError();
+          },
+        };
+      });
+    const deletion = vi.spyOn(User, "deleteOne");
+
+    const response = await DELETE(request());
+
+    expect(response.status).toBe(503);
+    expect(response.headers.has("set-cookie")).toBe(false);
+    expect(deletion).not.toHaveBeenCalled();
+    await expect(User.findById(userId)).resolves.not.toBeNull();
+    await expect(Favorite.countDocuments({ userId })).resolves.toBe(1);
+    await expect(SpotifyConnection.countDocuments({ userId })).resolves.toBe(1);
+    const pending = await readIntents();
+    expect(pending).toHaveLength(1);
+    expect(pending[0].state).toBe("pending");
+
+    factory.mockRestore();
+    expect((await DELETE(request())).status).toBe(200);
+    const completed = await readIntents();
+    expect(completed).toHaveLength(1);
+    expect(completed[0]._id).toEqual(pending[0]._id);
+    expect(completed[0].acceptedAt).toEqual(pending[0].acceptedAt);
+    expect(completed[0].state).toBe("completed");
+  });
+
+  it("keeps intent pending when a committed transaction result is uncertain", async () => {
+    const { userId } = await fixture();
+    const originalTransaction = mongoose.connection.transaction;
+    vi.spyOn(mongoose.connection, "transaction")
+      .mockImplementationOnce(async function (
+        this: typeof mongoose.connection,
+        ...args
+      ) {
+        await Reflect.apply(originalTransaction, this, args);
+        // Simulate loss of the successful outcome at the service boundary.
+        throw new Error("synthetic-uncertain-commit-result");
+      });
+
+    const response = await DELETE(request());
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      message: "Internal server error",
+    });
+    expect(response.headers.has("set-cookie")).toBe(false);
+    await expect(User.findById(userId)).resolves.toBeNull();
+    await expect(Favorite.countDocuments({ userId })).resolves.toBe(0);
+    await expect(SpotifyConnection.countDocuments({ userId })).resolves.toBe(0);
+    const intents = await readIntents();
+    expect(intents).toHaveLength(1);
+    expect(intents[0].state).toBe("pending");
+    expect(intents[0].completedAt).toBeUndefined();
   });
 
 });
