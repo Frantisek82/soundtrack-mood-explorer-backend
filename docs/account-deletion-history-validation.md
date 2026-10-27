@@ -99,8 +99,8 @@ No live signing secret has been changed by this implementation.
 
 ## Remaining work before reliance or release
 
-- Complete a supported operator launcher and operational target verification
-  for the implemented reconciliation runner.
+- Validate deployment-specific operator permissions, target inventory,
+  and failure behavior before relying on the implemented launcher.
 - Validate deployment-specific failure behavior; isolated uncertainty tests
   simulate service-boundary failures, not actual network partitions or failover.
 - Verify independent register storage, least-privilege permission enforcement,
@@ -164,13 +164,13 @@ every pending register record was matched or completed.
 
 ### Operational limits
 
-The runner is an internal callable function, not yet a supported command-line
-tool. Database-name and namespace checks do not independently prove cluster
-identity, writer isolation, or complete history coverage.
+The original runner is an internal callable function. An explicit operator
+launcher now adds connected-target checks; see the operator evidence below.
+These checks do not prove writer isolation or complete history coverage.
 
 No live register was provisioned or reconciled. Operational permissions,
 key custody, retention, reconciliation ownership/cadence, monitoring, and
-the supported launcher remain unresolved.
+deployment-specific operator validation remain unresolved.
 
 Full backend validation on 27 October 2026 passed:
 - 845 tests across 72 files.
@@ -186,3 +186,45 @@ Next.js reported loading .env.local; the listed command values override those
 settings, but this was not a fully isolated environment build.
 Compilation, TypeScript, page-data collection, and static generation passed.
 No deployment or operator reconciliation command was run.
+
+## Operator launcher evidence — 27 October 2026
+
+Implemented the explicit tsx-based operator launcher.
+See [operator guide](account-deletion-reconciliation.md).
+
+The launcher validates confirmation and private configuration without loading
+.env files. Automatic model collection/index creation is disabled. Application
+connection settings are bounded, and owned connections are closed on failure.
+
+Before enumeration, both connected targets must match expected database names,
+replica-set names, member endpoints, and the configured namespace. Overlapping
+members are rejected. Historical key availability is checked even for an empty
+dataset. One register handle is retained throughout candidate processing.
+
+Validation passed:
+- 906 backend tests across 79 files.
+- Standalone TypeScript, full ESLint, and whitespace checks.
+- CLI subprocess help, argument rejection, and sanitized configuration failure.
+- Mocked connection ownership, connection/run failure, and disposal failure.
+- Complete CLI processing against temporary synthetic replica sets.
+- Wrong register identity rejected without cleanup.
+- Pending deletion enforced, unaffected saved data/catalogue preserved.
+- Completion marking and repeated execution verified.
+
+These checks do not prove physical isolation, independent register recovery,
+permission enforcement, writer exclusion, or complete deletion-history coverage.
+Operational expectations require independently verified deployment inventory.
+Success covers enumerated candidates, not every unmatched pending obligation.
+
+No live operator run, provisioning, restore, cutover, or OAuth enablement occurred.
+Production build validation passed with Next.js 16.3.6 using webpack.
+The build ran in a temporary source copy excluding all .env files, with a
+minimal environment containing only loopback MongoDB and placeholder JWT
+configuration. Installed dependencies were reused through a symlink.
+Compilation, TypeScript, page-data collection, static generation, and build
+tracing passed. This does not validate the default Turbopack build.
+
+The dependency audit reported eight existing findings: two moderate, five high,
+and one critical. A lockfile comparison confirmed the affected versions predate
+the tsx addition. No finding was reported for tsx or esbuild in that audit.
+The findings remain unresolved; no automatic audit fix was applied.

@@ -25,7 +25,10 @@ export class DeletionReconciliationError extends Error {
 // Internal candidate operation, not an HTTP endpoint or recovery-replay helper.
 // Operator integration must first establish the intended application dataset.
 // Uses the existing application connection and never inserts deletion intent.
-export async function reconcileDeletionCandidate(userId: string): Promise<{
+export async function reconcileDeletionCandidateUsingRegister(
+  userId: string,
+  database: Awaited<ReturnType<typeof openDeletionHistoryDatabase>>["database"],
+): Promise<{
   matched: boolean;
   completedObligations: number;
 }> {
@@ -35,11 +38,10 @@ export async function reconcileDeletionCandidate(userId: string): Promise<{
   ) throw new DeletionReconciliationError();
 
   const config = getDeletionIdentityConfig();
-  const register = await openDeletionHistoryDatabase();
 
   try {
     // Reject missing historical keys before touching application data.
-    const versions = await register.database
+    const versions = await database
       .collection("accountdeletionintents")
       .distinct("keyVersion", { namespace: config.namespace });
     for (const version of versions) {
@@ -48,7 +50,7 @@ export async function reconcileDeletionCandidate(userId: string): Promise<{
       }
     }
 
-    const store = createDeletionIntentStore(register.database);
+    const store = createDeletionIntentStore(database);
     const matched: DeletionReference[] = [];
     for (const [keyVersion, key] of config.keys) {
       const reference = {
@@ -91,6 +93,24 @@ export async function reconcileDeletionCandidate(userId: string): Promise<{
   } catch {
     // Earlier cleanup or completion updates may have committed. Retrying is safe.
     throw new DeletionReconciliationError();
+  }
+}
+
+// Compatibility wrapper: owns its register connection.
+// Operator runs must instead retain and verify one shared register handle.
+export async function reconcileDeletionCandidate(userId: string): Promise<{
+  matched: boolean;
+  completedObligations: number;
+}> {
+  if (
+    !/^[a-f0-9]{24}$/.test(userId) ||
+    mongoose.connection.readyState !== 1
+  ) throw new DeletionReconciliationError();
+
+  getDeletionIdentityConfig();
+  const register = await openDeletionHistoryDatabase();
+  try {
+    return await reconcileDeletionCandidateUsingRegister(userId, register.database);
   } finally {
     await register.close();
   }

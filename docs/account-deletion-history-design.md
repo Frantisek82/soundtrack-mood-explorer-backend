@@ -234,7 +234,10 @@ with safe validation configuration, and git diff --check after implementation.
 - Establish reconciliation ownership, cadence, and escalation.
 - Define recovery-copy retirement and obligation retention.
 - Verify key custody and rotation procedures.
-- Implement and test session invalidation and target identity guards.
+- Validate operational session invalidation and target inventory; isolated
+  session tests and reconciliation topology guards are implemented.
+- Validate recovery-target isolation separately; reconciliation guards do
+  not make synthetic replay a supported operational restore tool.
 - Update the pending restore runbook and privacy disclosures.
 
 This proposal does not complete #51, #40, the unknown-copy investigation,
