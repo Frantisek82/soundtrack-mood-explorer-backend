@@ -1,13 +1,14 @@
 # Account deletion history — implementation and validation
 
 Status: IN PROGRESS.
-Evidence updated: 27 October 2026.
+Evidence updated: 28 October 2026.
 Tracking: backend #51; release gates: backend #40.
 Related draft PRs: #50 and #52.
 
 This document records branch implementation and isolated test evidence.
 It does not authorize register provisioning, Production restore, cutover,
-or Spotify OAuth enablement. The standalone roadmap will be updated later.
+or Spotify OAuth enablement. The standalone roadmap was updated on
+28 October with security integration; subsequent documentation work is separate.
 
 ## Implemented behavior
 
@@ -112,8 +113,9 @@ No live signing secret has been changed by this implementation.
 - Establish independently verified operational coverage and writer isolation.
 - Verify coordinated session invalidation and stale-writer exclusion.
 - Resolve the unlocated historical 5 October copy; absence is not proof of deletion.
-- Update the restore runbook on draft PR #50 and the description of draft PR #52.
-- Run final full-suite, TypeScript, lint, safe production build, and whitespace checks.
+- Keep the aligned restore runbook and both draft PR descriptions current.
+- Repeat relevant validation after further implementation changes; the latest
+  completed full validation is recorded below.
 - Resolve remaining logging, privacy, deployed/browser, and release gates in #40.
 
 The synthetic recovery helpers are not a supported Production restore command.
@@ -227,4 +229,37 @@ tracing passed. This does not validate the default Turbopack build.
 The dependency audit reported eight existing findings: two moderate, five high,
 and one critical. A lockfile comparison confirmed the affected versions predate
 the tsx addition. No finding was reported for tsx or esbuild in that audit.
-The findings remain unresolved; no automatic audit fix was applied.
+Those findings were unresolved at that time; the 28 October security
+integration below supersedes that audit status. No automatic audit fix was
+applied during the original launcher validation.
+
+## Security integration and runbook alignment — 28 October 2026
+
+Security PR #54 merged into dev as b5a04fd; issue #53 is closed.
+Merge commit fa4b5f52769a9b04d13078fa90f16e3931504ae4 incorporates
+that update into #51, preserving tsx 4.23.15 and the operator launcher.
+
+Validation at fa4b5f5 passed:
+- npm ci and npm audit, with zero reported vulnerabilities.
+- 906 tests across 79 files.
+- Standalone TypeScript, ESLint, and staged/unstaged whitespace checks.
+- Next.js 16.4.3 webpack and Turbopack production builds.
+- All four GitHub PR checks.
+
+Both production builds loaded .env.local. These runs do not establish
+environment-file isolation; the isolated 27 October webpack evidence above
+remains specific to that earlier source and dependency version.
+
+Draft PR #52's description records this validation and the resolved audit.
+Draft PR #50 commit 05cb6e20224650fec712f2296af22ce85f5b84c3 aligns
+the restore runbook with #51 evidence. Its whitespace review and all three
+PR checks passed. That documentation commit is on the separate #50 branch;
+the 906-test result above belongs to #51 at fa4b5f5.
+
+The runbook distinguishes synthetic recovery replay from the reconciliation
+launcher and retains quarantine, complete-history, coordinated session
+invalidation, and stale-writer exclusion requirements. Operational acceptance
+remains pending. Issues #40/#51 remain open; PRs #50/#52 remain draft.
+
+No live provisioning, operator reconciliation, restore, cutover, signing-secret
+rotation, or deployed Spotify OAuth enablement was performed during this work.
