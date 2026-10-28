@@ -1,7 +1,7 @@
 # Spotify restore safeguards
 
-Status: DRAFT — procedure not yet validated.
-Last updated: 25 October 2026.
+Status: DRAFT — synthetic evidence exists; operational procedure not validated.
+Last updated: 28 October 2026.
 Tracking: backend #40.
 Deletion-history and recovery implementation: backend #51.
 
@@ -60,8 +60,21 @@ Before any restored application is allowed to use Spotify:
 Generation increments alone are insufficient after a rollback of database
 history. Process-local cancellation also does not coordinate other instances.
 
-Sanitization and session invalidation require a separately reviewed and
-tested implementation. This document does not supply a Production command.
+Draft PR #52 implements synthetic recovery replay that removes all restored
+Spotify connections and OAuth transactions, including those of retained users.
+It does not release quarantine. Its recovery targets are restricted to opted-in
+loopback test databases; it is not a supported Production restore command.
+
+Synthetic signing-secret tests establish that fresh verifiers reject old
+sessions after rotation, while already loaded verifiers retain the old secret.
+Operational session invalidation requires privately replacing JWT_SECRET,
+restarting or replacing every signing/verifying instance, and verifying old
+sessions fail and new sessions work on every accepting instance. Stop old
+writers and establish a final write/deletion barrier before final reconciliation.
+Secret rotation alone does not exclude stale database writers.
+
+Live sanitization, coordinated session invalidation, and writer exclusion
+remain unverified. This document supplies no Production execution command.
 
 ## 4. Reconcile application-account deletions
 
@@ -76,12 +89,58 @@ The existing deleteApplicationAccount service requires an existing User.
 It must not be assumed to provide a complete idempotent restore-replay
 mechanism for missing Users or orphaned data.
 
-A durable deletion-history source and restore replay process have not
-been verified. They remain open decisions and enablement blockers.
+Draft PR #52 records pending intent before live transactional cleanup in
+an independently owned MongoDB client. Its synthetic replay applies pending
+and completed obligations, including missing Users and orphaned owner records.
+Each matched account is cleaned in a separate transaction. A later failure may
+leave earlier transactions committed; failed-account cleanup rolls back and
+the whole recovery dataset remains quarantined. Replay can be repeated safely.
+Recovery replay never marks live obligations completed.
+
+Coverage preflight checks supplied namespace, dates, history epoch,
+interruptions, and required keys. These claims do not independently prove
+complete history. A new register cannot reconstruct earlier deletions:
+pre-coverage copies remain ineligible for personal-data recovery without
+independent reconciliation. Incomplete history keeps recovery quarantined.
+
+Independent register durability/recovery, permissions, key custody, complete
+coverage, retention, monitoring, and operational acceptance remain blockers.
+
+The separate tsx reconciliation launcher enforces existing obligations against
+verified connected targets. It does not restore data, replay recovery,
+invalidate sessions, or release quarantine. Its success covers enumerated
+candidates, not every pending obligation. Unmatched HMAC digests cannot be
+reversed; retain them and do not infer completion. Connected-target checks
+do not prove physical isolation, independent recovery, or writer exclusion.
+
+Implementation and evidence are on draft PR #52 at fa4b5f5:
+- docs/account-deletion-history-design.md
+- docs/account-deletion-history-validation.md
+- docs/account-deletion-reconciliation.md
+
+These documents are branch evidence, not assumed present on this PR branch.
+PRs #50/#52 remain draft; issues #40/#51 remain open.
 
 ## 5. Validate before any cutover
 
-Required isolated drills:
+Recorded synthetic evidence on draft PR #52:
+- Replay covered pending/completed obligations, missing Users, orphaned
+  ownership records, unaffected-data preservation, partial failure, and resume.
+- All restored Spotify connections and OAuth transactions were removed.
+- Session tests covered fresh-secret rejection and loaded-verifier limitations.
+- Separate operator CLI drills covered wrong-target rejection, deletion
+  enforcement, completion marking, and repeated processing.
+- Full validation at fa4b5f5 passed 906 tests across 79 files, ESLint,
+  TypeScript, whitespace checks, and both Next.js 16.4.3 production builds.
+  Both builds loaded .env.local; they do not establish environment isolation.
+- All four PR checks passed at that head.
+
+This evidence does not validate deployment-specific quarantine, a final
+write/deletion barrier, coordinated session invalidation, stale-writer
+exclusion, register recovery, permissions, or complete history coverage.
+Those checks remain required before operational acceptance.
+
+Required isolated drills and deployment-specific verification:
 - Synthetic restored credentials and transactions become unusable.
 - Removed records cannot be recreated by simulated old-generation work.
 - Post-snapshot account deletions are reapplied, including owned Playlists.
