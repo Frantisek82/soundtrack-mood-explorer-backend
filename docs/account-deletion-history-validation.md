@@ -1,7 +1,7 @@
 # Account deletion history — implementation and validation
 
 Status: IN PROGRESS.
-Evidence updated: 28 October 2026.
+Evidence updated: 29 October 2026.
 Tracking: backend #51; release gates: backend #40.
 Related draft PRs: #50 and #52.
 
@@ -263,3 +263,44 @@ remains pending. Issues #40/#51 remain open; PRs #50/#52 remain draft.
 
 No live provisioning, operator reconciliation, restore, cutover, signing-secret
 rotation, or deployed Spotify OAuth enablement was performed during this work.
+
+## Isolated register permission validation — 29 October 2026
+
+Added authenticated permission tests using a dedicated temporary loopback
+MongoDB replica set, synthetic credentials, and collection-scoped custom roles.
+The existing test connection guards were preserved.
+
+Verified register roles on accountdeletionintents:
+- Application writer: find, insert, and update support recording, duplicate
+  retries, reads, and completion.
+- Recovery reader: find permits obligation enumeration; register mutations
+  are denied.
+- Reconciler: find and update support the real candidate reconciliation
+  function, completion recording, and repeated processing without insert access.
+
+The tests verify denied deletion, collection/database destruction, access
+outside the permitted collection, and self-granted broader privileges.
+The reconciliation test uses the existing isolated application test database;
+it does not verify application-database permission enforcement.
+Its HTTP guard confirms no fetch requests during reconciliation.
+
+Implementation commits:
+- 2279df6: application writer permission coverage.
+- b82ec4f: recovery reader permission coverage.
+- b2c49e3: reconciliation register permission coverage.
+
+Focused validation for b2c49e3 passed:
+- Eight permission tests and 11 existing reconciliation tests: 19 total.
+- Standalone TypeScript, ESLint for the changed test file, and whitespace checks.
+- All four GitHub PR checks; PR #52 remained open and draft.
+
+These results establish permission enforcement only on the temporary local
+MongoDB deployment. Atlas role availability, deployed credentials and grants,
+application-database permissions, independent storage/recovery, history
+completeness, key custody, and operational acceptance remain unverified.
+The earlier full-suite, audit, and production-build evidence remains specific
+to the commits and dates recorded above.
+
+No live provisioning, operator reconciliation, restore, cutover, signing-secret
+rotation, or deployed Spotify OAuth enablement was performed during this work.
+Issues #40/#51 remain open.
