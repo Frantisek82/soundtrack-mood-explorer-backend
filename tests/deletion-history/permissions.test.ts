@@ -10,6 +10,7 @@ type Client = InstanceType<typeof mongoose.mongo.MongoClient>;
 let replicaSet: MongoMemoryReplSet | undefined;
 let administrator: Client | undefined;
 let writer: Client | undefined;
+let reader: Client | undefined;
 
 const databaseName = DELETION_HISTORY_TEST_DATABASE;
 const collectionName = "accountdeletionintents";
@@ -79,11 +80,42 @@ describe("Deletion register collection permissions", () => {
       writeConcern: { w: "majority", journal: true, wtimeoutMS: 5000 },
     });
     await writer.connect();
+
+    await database.command({
+      createRole: "synthetic-recovery-reader",
+      privileges: [{
+        resource: { db: databaseName, collection: collectionName },
+        actions: ["find"],
+      }],
+      roles: [],
+    });
+    await database.command({
+      createUser: "synthetic-reader",
+      pwd: "synthetic-reader-password",
+      roles: [{ role: "synthetic-recovery-reader", db: databaseName }],
+    });
+
+    reader = new mongoose.mongo.MongoClient(uri, {
+      auth: {
+        username: "synthetic-reader",
+        password: "synthetic-reader-password",
+      },
+      authSource: databaseName,
+      serverSelectionTimeoutMS: 5000,
+      retryReads: false,
+      retryWrites: false,
+      readConcern: { level: "majority" },
+    });
+    await reader.connect();
   });
 
   afterAll(async () => {
     try {
-      await writer?.close();
+      try {
+        await reader?.close();
+      } finally {
+        await writer?.close();
+      }
     } finally {
       try {
         await administrator?.close();
@@ -142,6 +174,53 @@ describe("Deletion register collection permissions", () => {
   it("denies granting itself broader privileges", async () => {
     await expect(writer!.db(databaseName).command({
       grantRolesToUser: "synthetic-writer",
+      roles: [{ role: "readWrite", db: databaseName }],
+    })).rejects.toMatchObject({ code: 13 });
+  });
+
+  it("allows recovery reads but denies register mutations", async () => {
+    const database = reader!.db(databaseName);
+    const records = database.collection(collectionName);
+    const obligations = await records.find({
+      namespace: reference.namespace,
+    }).toArray();
+
+    expect(obligations).toHaveLength(1);
+    expect(obligations[0]).toMatchObject({
+      namespace: reference.namespace,
+      digest: reference.digest,
+      state: "completed",
+    });
+
+    await expect(records.insertOne({ synthetic: true }))
+      .rejects.toMatchObject({ code: 13 });
+    await expect(records.updateOne({}, { $set: { state: "pending" } }))
+      .rejects.toMatchObject({ code: 13 });
+    await expect(records.deleteMany({}))
+      .rejects.toMatchObject({ code: 13 });
+    await expect(database.command({ drop: collectionName }))
+      .rejects.toMatchObject({ code: 13 });
+    await expect(database.command({ dropDatabase: 1 }))
+      .rejects.toMatchObject({ code: 13 });
+
+    expect(await records.find({
+      namespace: reference.namespace,
+    }).toArray()).toEqual(obligations);
+  });
+
+  it("denies recovery-reader access elsewhere and privilege escalation", async () => {
+    for (const collection of [
+      reader!.db(databaseName).collection("unrelated"),
+      reader!.db("synthetic-other").collection("records"),
+    ]) {
+      await expect(collection.findOne({}))
+        .rejects.toMatchObject({ code: 13 });
+      await expect(collection.insertOne({ unauthorized: true }))
+        .rejects.toMatchObject({ code: 13 });
+    }
+
+    await expect(reader!.db(databaseName).command({
+      grantRolesToUser: "synthetic-reader",
       roles: [{ role: "readWrite", db: databaseName }],
     })).rejects.toMatchObject({ code: 13 });
   });
