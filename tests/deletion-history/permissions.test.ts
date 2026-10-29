@@ -1,6 +1,13 @@
 import mongoose from "mongoose";
 import { MongoMemoryReplSet } from "mongodb-memory-server";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+
+import { getDeletionIdentityConfig } from "@/lib/deletion-history/config";
+import { createDeletionIdentifier } from "@/lib/deletion-history/identifier";
+import {
+  reconcileDeletionCandidateUsingRegister,
+} from "@/lib/deletion-history/reconcile";
+import User from "@/models/User";
 
 import { createDeletionIntentStore } from "@/lib/deletion-history/store";
 import { DELETION_HISTORY_TEST_DATABASE } from "@/lib/deletion-history/target";
@@ -11,6 +18,7 @@ let replicaSet: MongoMemoryReplSet | undefined;
 let administrator: Client | undefined;
 let writer: Client | undefined;
 let reader: Client | undefined;
+let reconciler: Client | undefined;
 
 const databaseName = DELETION_HISTORY_TEST_DATABASE;
 const collectionName = "accountdeletionintents";
@@ -107,12 +115,43 @@ describe("Deletion register collection permissions", () => {
       readConcern: { level: "majority" },
     });
     await reader.connect();
+
+    await database.command({
+      createRole: "synthetic-reconciler",
+      privileges: [{
+        resource: { db: databaseName, collection: collectionName },
+        actions: ["find", "update"],
+      }],
+      roles: [],
+    });
+    await database.command({
+      createUser: "synthetic-reconciler",
+      pwd: "synthetic-reconciler-password",
+      roles: [{ role: "synthetic-reconciler", db: databaseName }],
+    });
+    reconciler = new mongoose.mongo.MongoClient(uri, {
+      auth: {
+        username: "synthetic-reconciler",
+        password: "synthetic-reconciler-password",
+      },
+      authSource: databaseName,
+      serverSelectionTimeoutMS: 5000,
+      retryReads: false,
+      retryWrites: false,
+      readConcern: { level: "majority" },
+      writeConcern: { w: "majority", journal: true, wtimeoutMS: 5000 },
+    });
+    await reconciler.connect();
   });
 
   afterAll(async () => {
     try {
       try {
-        await reader?.close();
+        try {
+          await reconciler?.close();
+        } finally {
+          await reader?.close();
+        }
       } finally {
         await writer?.close();
       }
@@ -221,6 +260,79 @@ describe("Deletion register collection permissions", () => {
 
     await expect(reader!.db(databaseName).command({
       grantRolesToUser: "synthetic-reader",
+      roles: [{ role: "readWrite", db: databaseName }],
+    })).rejects.toMatchObject({ code: 13 });
+  });
+
+  it("reconciles and retries with only register find and update permissions", async () => {
+    const user = await User.create({
+      name: "Synthetic Restricted Reconciliation",
+      email: "restricted-reconciliation@example.com",
+      password: "test-only-password",
+    });
+    const userId = user._id.toString();
+    const config = getDeletionIdentityConfig();
+    const obligation = {
+      namespace: config.namespace,
+      keyVersion: config.activeKeyVersion,
+      digest: createDeletionIdentifier(userId, {
+        namespace: config.namespace,
+        keyVersion: config.activeKeyVersion,
+        key: config.keys.get(config.activeKeyVersion)!,
+      }),
+    };
+    const adminStore = createDeletionIntentStore(
+      administrator!.db(databaseName),
+    );
+    const pending = await adminStore.recordPending(obligation);
+    const database = reconciler!.db(databaseName);
+    const fetchGuard = vi.spyOn(globalThis, "fetch").mockRejectedValue(
+      new Error("External HTTP forbidden during reconciliation"),
+    );
+
+    try {
+      await expect(reconcileDeletionCandidateUsingRegister(userId, database))
+        .resolves.toEqual({ matched: true, completedObligations: 1 });
+      expect(await User.exists({ _id: userId })).toBeNull();
+
+      const completed = await adminStore.findExisting(obligation);
+      expect(completed?.state).toBe("completed");
+      expect(completed?.acceptedAt).toEqual(pending.acceptedAt);
+
+      await expect(reconcileDeletionCandidateUsingRegister(userId, database))
+        .resolves.toEqual({ matched: true, completedObligations: 1 });
+      expect(await adminStore.findExisting(obligation)).toEqual(completed);
+      expect(fetchGuard).not.toHaveBeenCalled();
+    } finally {
+      fetchGuard.mockRestore();
+    }
+  });
+
+  it("denies reconciler insertion, destruction, unrelated access, and escalation", async () => {
+    const database = reconciler!.db(databaseName);
+    const records = database.collection(collectionName);
+
+    await expect(records.insertOne({ synthetic: true }))
+      .rejects.toMatchObject({ code: 13 });
+    await expect(records.deleteMany({}))
+      .rejects.toMatchObject({ code: 13 });
+    await expect(database.command({ drop: collectionName }))
+      .rejects.toMatchObject({ code: 13 });
+    await expect(database.command({ dropDatabase: 1 }))
+      .rejects.toMatchObject({ code: 13 });
+
+    for (const collection of [
+      database.collection("unrelated"),
+      reconciler!.db("synthetic-other").collection("records"),
+    ]) {
+      await expect(collection.findOne({}))
+        .rejects.toMatchObject({ code: 13 });
+      await expect(collection.updateOne({}, { $set: { unauthorized: true } }))
+        .rejects.toMatchObject({ code: 13 });
+    }
+
+    await expect(database.command({
+      grantRolesToUser: "synthetic-reconciler",
       roles: [{ role: "readWrite", db: databaseName }],
     })).rejects.toMatchObject({ code: 13 });
   });
