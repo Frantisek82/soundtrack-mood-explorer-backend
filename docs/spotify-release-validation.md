@@ -493,3 +493,39 @@ they do not identify the historical snapshot.
 
 Backup/deletion and restore review remains incomplete. No backup was
 deleted or restored during this search. Other validation work can proceed.
+
+## Preview disablement rechecked — 30 October 2026
+
+The maintainer inspected the backend Preview callback in Chrome on Windows
+after passing Vercel deployment protection. No OAuth query parameters were
+supplied and no Spotify authorization flow was started.
+
+Preview URL:
+https://soundtrack-mood-explorer-backend-git-935b38-frantisek-projects.vercel.app/api/spotify/callback
+
+Deployment linked from PR #52 at head df162bd:
+https://vercel.com/frantisek-projects/soundtrack-mood-explorer-backend/4DiXUuhqx3afi83vAwX5EnMipk1Q
+
+Observed application response:
+- HTTP 503 Service Unavailable.
+- JSON message: Spotify connection unavailable.
+- No Location response header.
+- Cache-Control: no-store.
+
+An unauthenticated terminal request first received a Vercel SSO redirect.
+That response came from deployment protection and was not application
+disablement evidence. Deployment protection was left enabled.
+
+On 29 October, 105 automated tests across configuration and connect,
+callback, status, and disconnect routes passed on the #51 branch.
+Preview assertions cover unavailable responses, no callback provider request
+or redirect, no new OAuth transaction, and preserved disconnect data.
+
+Together, the code review, automated checks, and deployed callback observation
+support the Preview-disablement prerequisite. The browser check did not
+independently inspect outgoing server requests or exercise every deployed route.
+
+This does not resolve the previously observed callback query-string exposure
+in Vercel Runtime Logs. Logging exclusion, remaining privacy/restore gates,
+and real OAuth/browser-flow validation remain incomplete.
+Deployed OAuth remains disabled; no production settings were changed.
