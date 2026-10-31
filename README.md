@@ -164,7 +164,7 @@ Environment variables required:
 
 ## Spotify OAuth foundation
 
-The backend includes Spotify account linking, encrypted persistence, coordinated token refresh, database-only connection status, disconnect, and transactional Spotify cleanup during account deletion. Frontend controls and production verification remain pending. Account deletion also removes owned custom Playlists (#45), preserving other users' data and the shared Soundtrack catalogue.
+The backend includes Spotify account linking, encrypted persistence, coordinated token refresh, database-only connection status, disconnect, and transactional Spotify cleanup during account deletion. Frontend controls and notices are implemented and locally tested. Deployed browser verification and final privacy review remain pending; deployed OAuth stays disabled while platform callback logging is unresolved. Account deletion also removes owned custom Playlists (#45), preserving other users' data and the shared Soundtrack catalogue.
 
 See [account linking](docs/spotify-account-linking.md), [refresh and status](docs/spotify-refresh-status.md), [disconnect and deletion](docs/spotify-disconnect-deletion.md), [configuration](docs/spotify-configuration.md), [encrypted persistence](docs/spotify-persistence.md), and [architecture](docs/spotify-oauth-plan.md).
 
@@ -181,7 +181,18 @@ RESEND_API_KEY=re_replace_with_your_key
 CONTACT_EMAIL=your@email.com
 ```
 
-These are examples, not working credentials.
+These are examples, not working credentials. Use `.env.example` as a
+starting point for private `.env.local` configuration. Replace placeholders
+before using the corresponding feature; never commit real values.
+
+Spotify OAuth defaults to disabled. Keep `SPOTIFY_ENABLED=false` while
+release gates remain unresolved. The optional Spotify settings and exact
+local/production URL pairs are documented in
+[Spotify configuration](docs/spotify-configuration.md). The backend-owned
+PKCE flow does not require a Spotify Client Secret.
+
+Application operations that use MongoDB transactions require a replica set
+or another supported transaction-capable deployment.
 
 `MONGODB_URI` determines the actual database target. A local development server can connect to a deployed application database if configured with its connection string.
 
@@ -205,10 +216,19 @@ npm run dev
 The development server normally runs at:
 
 ```text
-http://localhost:3000
+http://127.0.0.1:3000
 ```
 
-Confirm the port shown in the terminal before sending local API requests.
+For Spotify integration testing, open the frontend at
+`http://127.0.0.1:3001` and configure its `NEXT_PUBLIC_API_URL` as
+`http://127.0.0.1:3000/api`. Use `127.0.0.1` consistently for both services
+and sign in again when switching from localhost; cookies do not transfer
+between those hosts.
+
+Confirm both server ports before testing. If necessary, start the backend
+with `npm run dev -- --port 3000`; resolve port conflicts rather than
+accepting a fallback port that differs from the configured callback.
+These setup instructions do not authorize OAuth enablement.
 
 ---
 
@@ -438,11 +458,15 @@ The backend uses dynamic CORS handling through the `getCorsHeaders(origin)` help
 
 Supported environments:
 
-- Local development (`http://localhost:3001`)
+- Local development (`http://localhost:3001` and `http://127.0.0.1:3001`)
 - Vercel Production
 - Vercel Preview Deployments
 
-Frontend-facing API routes use the same dynamic CORS strategy, allowing requests from approved frontend origins while supporting authentication using httpOnly cookies.
+General frontend-facing API routes use dynamic CORS handling with
+httpOnly-cookie authentication. Spotify routes use their dedicated
+exact-origin helpers and the configured frontend origin; general Preview
+CORS support does not enable Spotify OAuth. Spotify configuration is always
+disabled when `VERCEL_ENV=preview`.
 
 ### Credentials
 
@@ -567,7 +591,10 @@ Future improvements include:
 
 ### 🚧 Planned
 
-- Spotify OAuth
+- Complete Spotify OAuth release validation: account linking, encrypted
+  persistence, refresh/status, disconnect, and frontend controls are implemented;
+  logging, privacy, restore, and browser gates remain open. Deployed OAuth
+  stays disabled. Playback and playlist synchronization are outside this milestone.
 - Admin dashboard
 - AI recommendations
 - Broader frontend/backend integration and end-to-end testing
