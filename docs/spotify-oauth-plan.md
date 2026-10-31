@@ -138,7 +138,7 @@ Before real-user enablement, display a privacy notice covering identity, encrypt
 
 ## 10. Verification
 
-Reuse Vitest, Node environment, tests/\*_/_.test.ts, sequential files and isolated MongoDB. Use fake provider responses at the fetch boundary, real crypto and persistence, injected clock and test-only keys. No live Spotify calls, real credentials or production database in automated tests. Add guards so unexpected provider HTTP cannot escape mocks.
+Reuse Vitest, Node environment, `tests/**/*.test.ts`, sequential files and isolated MongoDB. Use fake provider responses at the fetch boundary, real crypto and persistence, injected clock and test-only keys. No live Spotify calls, real credentials or production database in automated tests. Add guards so unexpected provider HTTP cannot escape mocks.
 
 Cover: URL construction/minimal scopes; state/verifier randomness and S256; cookie flags; missing/expired/mismatched/replayed/wrong-user/replaced-session transactions; denial and duplicate query parameters; missing User; encrypted persistence/tampering/key versions; safe API/profile serialization; unique ownership conflicts; failed reconnect preservation; omitted/replaced refresh tokens; expiry/invalid_grant; timeout/401/403/429/5xx; concurrent callbacks and refreshes; disconnect/reconnect and deletion races. Use the replica-set test foundation for transactional checks. Preserve existing authentication, Favorites, Playlists and database safety tests.
 
@@ -148,7 +148,11 @@ Documentation-only validation: review source links, requirement coverage and git
 
 ## 11. Ordered implementation issues
 
-These are proposed titles, not created issues or completed work.
+The implementation sequence below was tracked through backend
+#35 (configuration), #36 (persistence), #37 (account linking),
+#38 (refresh/status), #39 (disconnect/deletion), frontend #44,
+and backend #40 (release validation). Core implementation is on dev;
+frontend #44 and backend #40 retain outstanding release checks.
 
 1. **Prepare Spotify configuration, exact origins and cookie handling** — validated config, preview disablement, loopback CORS, mutation Origin checks, transaction cookie helpers and local setup instructions; frontend environment dependency.
 2. **Add encrypted Spotify persistence and transactional test foundation** — connections/transactions, indexes, User generation and safe serialization, key lifecycle, replica-set isolation and transaction/concurrency checks.
@@ -193,10 +197,86 @@ verifiers, and raw error messages must never appear in the return URL.
 The result parameter is only a notification, not proof of connection.
 The frontend must fetch authenticated backend connection status.
 
-Frontend #44 must implement result handling, remove the notification parameter
-after processing, and preserve a session_expired notice when the profile
-authentication guard redirects to the fixed /login route. Unknown or duplicate
-result parameters must not produce a success notification.
+Frontend handling removes the notification parameter after processing
+and preserves a session_expired notice when the profile authentication guard
+redirects to the fixed /login route. Unknown or duplicate result parameters
+do not produce a success notification. These behaviors are covered by
+automated tests; deployed/browser acceptance remains pending in frontend #44.
 
 The URL helper and its 11 tests were merged through backend #37.
 Frontend handling is implemented through frontend PR #45, merged into dev as b4a40ce. Automated callback and profile integration tests pass. Frontend #44 remains open for privacy review and deployed/browser checks.
+
+## Architecture status and evidence — 31 October 2026
+
+This section records implementation decisions and dated evidence. It does
+not constitute release acceptance or a new provider-requirements review.
+The official-source review date above remains 22 October 2026.
+
+### Implemented decisions
+
+- Backend-owned Authorization Code with PKCE and S256; application login
+  remains separate. Provider exchange and credential storage stay on the backend.
+- Exact local/production origins and callback URLs, bounded callback results,
+  session/browser binding, and single-use OAuth transactions.
+- Encrypted Spotify persistence, unique ownership, generation fencing,
+  coordinated refresh, database-only status, and transactional disconnect
+  and account-deletion cleanup.
+- Frontend connection controls, callback/status confirmation, and notices
+  are implemented. Their existence does not complete the privacy/agreement review.
+- Playback, Spotify playlist synchronization, recommendations, and
+  unrestricted public Spotify access remain outside this milestone.
+
+### Recovery design and branch boundaries
+
+Account-deletion history is implemented separately on draft PR #52 for #51.
+The design uses an independent register connection and durable deletion
+intent before live cleanup. Synthetic recovery replay retains quarantine,
+reapplies deletion obligations, and removes restored Spotify connections
+and pending OAuth transactions.
+
+Authenticated temporary-database tests cover separate register writer,
+recovery-reader, and reconciliation roles. At b2c49e3, eight permission tests
+and 11 reconciliation tests passed, together with TypeScript and focused lint.
+The evidence document was updated at df162bd.
+
+These changes remain on the separate #51 branch. They are not established
+as merged into dev or this release-validation branch. No live register
+has been provisioned or operationally accepted. Deployment permissions,
+independent recovery, complete deletion history, key custody, retention,
+writer exclusion, and coordinated session invalidation remain open.
+See draft PR #52's docs/account-deletion-history-validation.md and the
+[restore runbook](spotify-restore-runbook.md) on draft PR #50.
+
+### Verified configuration and Preview behavior
+
+Saved Production configuration, encryption-key format, required Spotify
+indexes, and transaction support were verified on 22 October.
+This does not establish successful active-deployment OAuth.
+
+On 29 October, 105 configuration and Spotify route tests passed on #51.
+On 30 October, the maintainer inspected the deployed backend Preview
+callback after Vercel sign-in: HTTP 503, no Location header, and
+Cache-Control: no-store. No OAuth query parameters were supplied.
+Deployment protection remained enabled. This callback observation does
+not independently establish outgoing server traffic or every deployed route.
+See [release validation](spotify-release-validation.md).
+
+Backend README and placeholder configuration were updated at 2b6df18
+on draft PR #50; all three PR checks passed. Frontend README at 7bd8119
+and its connection guide were reviewed for matching setup and behavior.
+Documentation preparation is distinct from deployment validation.
+
+### Remaining acceptance gates
+
+The observed Vercel Runtime Logs exposure of fake callback query values
+remains unresolved. The maintainer reported no Community reply on
+30 October. No pre-storage redaction remedy has been verified.
+
+Keep deployed OAuth disabled pending logging exclusion, final
+privacy/agreement/branding review, retention and restore safeguards,
+and remaining local/deployed browser checks. Record Chrome and Safari/iOS
+limitations without requiring weakened browser privacy settings.
+
+Issues #40/#51 remain open; PRs #50/#52 remain draft. No restore, cutover,
+signing-secret rotation, or production OAuth enablement is authorized by
+this documentation update. v2.2.0 remains unreleased.
