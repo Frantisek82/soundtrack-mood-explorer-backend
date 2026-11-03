@@ -529,3 +529,40 @@ This does not resolve the previously observed callback query-string exposure
 in Vercel Runtime Logs. Logging exclusion, remaining privacy/restore gates,
 and real OAuth/browser-flow validation remain incomplete.
 Deployed OAuth remains disabled; no production settings were changed.
+
+## Local application regression — 3 November 2026
+
+The maintainer verified the following in Chrome inside the Linux Mint VM,
+using the confirmed development database and loopback frontend/backend URLs.
+
+Source versions:
+- Backend: e233442 on chore/40-spotify-release-validation.
+- Frontend: 7bd8119 on dev.
+- Both worktrees were clean and synchronized at evidence capture.
+
+Runtime configuration:
+- Backend: http://127.0.0.1:3000 with SPOTIFY_ENABLED=false.
+- Frontend: http://127.0.0.1:3001 with
+  NEXT_PUBLIC_API_URL=http://127.0.0.1:3000/api and
+  NEXT_PUBLIC_SPOTIFY_ENABLED=false.
+- The development catalogue had been populated through the additive seed route.
+
+Maintainer-reported checks passed:
+- Sign-in and authenticated Profile access.
+- Profile remained authenticated after reload.
+- Seeded catalogue displayed on Explore.
+- Adding a Favorite, viewing it, and persistence after reload.
+- Profile favorite count matched the saved Favorite.
+- Playlist creation and adding a soundtrack.
+- Playlist and soundtrack persistence after reload.
+- Playlist rename and persistence of the new name after reload.
+- Removing the soundtrack and deleting the temporary test playlist.
+- Logout and direct /profile navigation redirecting to Login.
+- Signing in again preserved the Favorite; the deleted playlist stayed absent.
+
+Spotify controls remained disabled. No Spotify authorization, refresh,
+disconnect, account switching, or account-deletion flow was exercised.
+These results cover local application regression only, not deployed
+behavior, Safari/iOS, or completion of the Spotify browser-validation gate.
+Logging, privacy/agreement, and retention/restore requirements remain open.
+Deployed OAuth remains disabled; v2.2.0 remains unreleased.
