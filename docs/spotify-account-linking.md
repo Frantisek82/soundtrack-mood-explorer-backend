@@ -82,7 +82,8 @@ following, and no automatic retries.
 
 Only account_id and nullable display_name are retained from the profile.
 There is no email/id fallback for account linking. No optional scopes are
-requested; live minimal-scope identity access remains to be verified.
+requested; local minimal-scope identity access was verified with the
+allowlisted account on 16 October 2026.
 
 ## Ownership and reauthorization
 
@@ -144,12 +145,13 @@ replay, concurrent consumption, denial, malformed callbacks, provider failures,
 stable identity, ownership conflicts, safe serialization, and invalidation or
 User deletion during provider requests.
 
-Manual local verification is still pending. Before that check, privately confirm
-a dedicated development database and separate development encryption keys.
+Manual local verification completed on 16 October 2026 using a dedicated
+development database and separate development encryption keys.
 Do not share environment values, tokens, cookie contents, or authorization URLs.
 
-Production registration, logging/privacy/deletion safeguards, and deployed
-browser validation remain tracked in #40.
+Production callback registration, saved configuration, indexes, and a
+transactional read are verified; see [release validation](spotify-release-validation.md).
+Logging/privacy/restore safeguards and deployed browser checks remain in #40.
 
 ## Manual local verification — 2026-10-16
 
@@ -162,4 +164,5 @@ Spotify account. No optional scopes were requested.
 
 Next.js development incoming-request logging is disabled to avoid logging
 callback query strings. Production logging verification remains in #40.
-Frontend connection controls and result notifications remain in frontend #44.
+Frontend controls and result notifications are implemented through frontend PR #45.
+Frontend #44 remains open for privacy review and deployed/browser verification.
