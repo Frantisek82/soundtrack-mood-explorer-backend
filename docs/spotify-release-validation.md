@@ -566,3 +566,12 @@ These results cover local application regression only, not deployed
 behavior, Safari/iOS, or completion of the Spotify browser-validation gate.
 Logging, privacy/agreement, and retention/restore requirements remain open.
 Deployed OAuth remains disabled; v2.2.0 remains unreleased.
+
+## Spotify embed attribution and track link — 5 November 2026
+
+In Chrome inside Linux Mint, the local soundtrack detail page for Time by
+Hans Zimmer loaded the Spotify embed and displayed the Spotify logo.
+Clicking the logo opened the same track on open.spotify.com in a new tab.
+
+This check covers attribution and navigation on the soundtrack detail page.
+The separate Profile connection-status error remains to be investigated.
