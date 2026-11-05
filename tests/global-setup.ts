@@ -4,28 +4,43 @@ import type { TestProject } from "vitest/node";
 declare module "vitest" {
   export interface ProvidedContext {
     mongoUri: string;
+    deletionHistoryMongoUri: string;
   }
 }
 
 export default async function globalSetup(project: TestProject) {
-  const mongoServer = await MongoMemoryReplSet.create({
-    replSet: {
-      count: 1,
-      storageEngine: "wiredTiger",
-    },
+  const application = await MongoMemoryReplSet.create({
+    replSet: { count: 1, storageEngine: "wiredTiger" },
   });
+  let register: MongoMemoryReplSet | undefined;
 
   try {
+    register = await MongoMemoryReplSet.create({
+      replSet: { count: 1, storageEngine: "wiredTiger" },
+    });
+
     project.provide(
       "mongoUri",
-      mongoServer.getUri("soundtrack-mood-explorer-test"),
+      application.getUri("soundtrack-mood-explorer-test"),
+    );
+    project.provide(
+      "deletionHistoryMongoUri",
+      register.getUri("sme-deletion-history-test"),
     );
   } catch (error) {
-    await mongoServer.stop();
+    try {
+      if (register) await register.stop();
+    } finally {
+      await application.stop();
+    }
     throw error;
   }
 
   return async () => {
-    await mongoServer.stop();
+    try {
+      if (register) await register.stop();
+    } finally {
+      await application.stop();
+    }
   };
 }

@@ -1,3 +1,5 @@
+import { DeletionHistoryConfigError } from "@/lib/deletion-history/config";
+import { DeletionHistoryStorageError } from "@/lib/deletion-history/client";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
@@ -158,6 +160,16 @@ export async function DELETE(req: Request) {
 
     return response;
   } catch (error) {
+    if (
+      error instanceof DeletionHistoryConfigError ||
+      error instanceof DeletionHistoryStorageError
+    ) {
+      return NextResponse.json(
+        { message: "Account deletion temporarily unavailable" },
+        { status: 503, headers },
+      );
+    }
+
     if (
       error instanceof SpotifySessionError ||
       error instanceof SpotifyGenerationError

@@ -9,7 +9,10 @@ import {
   vi,
 } from "vitest";
 
-import { deleteApplicationAccount } from "@/lib/account-deletion";
+import {
+  cleanupAcceptedAccountDeletion,
+  deleteApplicationAccount,
+} from "@/lib/account-deletion";
 import type { SpotifyConfig } from "@/lib/spotify/config";
 import { persistSpotifyAccountLink } from "@/lib/spotify/link";
 import { createSpotifyOAuthTransaction } from "@/lib/spotify/transactions";
@@ -234,4 +237,77 @@ describe("Transactional application-account deletion", () => {
     await expect(deleteApplicationAccount(new Types.ObjectId().toString()))
       .rejects.toMatchObject({ code: "stale_spotify_generation" });
   });
+
+  it("reconciles an existing User through fenced cleanup", async () => {
+    const userId = await fixture();
+    await cleanupAcceptedAccountDeletion(userId);
+
+    await expect(User.findById(userId)).resolves.toBeNull();
+    await expect(Favorite.countDocuments({ userId })).resolves.toBe(0);
+    await expect(Playlist.countDocuments({ userId })).resolves.toBe(0);
+    await expect(SpotifyConnection.countDocuments({ userId })).resolves.toBe(0);
+    await expect(SpotifyOAuthTransaction.countDocuments({ userId })).resolves.toBe(0);
+  });
+
+  it("cleans orphaned records repeatedly without recreating a missing User", async () => {
+    const userId = await fixture();
+    const otherId = await fixture("other");
+    await User.deleteOne({ _id: userId });
+
+    await cleanupAcceptedAccountDeletion(userId);
+    await cleanupAcceptedAccountDeletion(userId);
+
+    await expect(User.findById(userId)).resolves.toBeNull();
+    await expect(Favorite.countDocuments({ userId })).resolves.toBe(0);
+    await expect(Playlist.countDocuments({ userId })).resolves.toBe(0);
+    await expect(SpotifyConnection.countDocuments({ userId })).resolves.toBe(0);
+    await expect(SpotifyOAuthTransaction.countDocuments({ userId })).resolves.toBe(0);
+    await expectPreserved(otherId);
+  });
+
+  it("rolls back orphan cleanup when Playlist deletion fails", async () => {
+    const userId = await fixture();
+    await User.deleteOne({ _id: userId });
+    vi.spyOn(Playlist, "deleteMany").mockImplementationOnce(() => {
+      throw new Error("synthetic-orphan-cleanup-failure");
+    });
+
+    await expect(cleanupAcceptedAccountDeletion(userId))
+      .rejects.toThrow("synthetic-orphan-cleanup-failure");
+
+    await expect(User.findById(userId)).resolves.toBeNull();
+    await expect(Favorite.countDocuments({ userId })).resolves.toBe(1);
+    await expect(Playlist.countDocuments({ userId })).resolves.toBe(2);
+    await expect(SpotifyConnection.countDocuments({ userId })).resolves.toBe(1);
+    await expect(SpotifyOAuthTransaction.countDocuments({ userId })).resolves.toBe(2);
+  });
+
+  it("does not bypass fencing for an existing User with invalid counters", async () => {
+    const userId = await fixture();
+    await User.collection.updateOne(
+      { _id: new Types.ObjectId(userId) },
+      { $set: { spotifyLinkGeneration: -1 } },
+    );
+    const cleanup = vi.spyOn(Favorite, "deleteMany");
+
+    await expect(cleanupAcceptedAccountDeletion(userId))
+      .rejects.toMatchObject({ code: "stale_spotify_generation" });
+
+    expect(cleanup).not.toHaveBeenCalled();
+    await expect(User.findById(userId)).resolves.not.toBeNull();
+    await expect(Favorite.countDocuments({ userId })).resolves.toBe(1);
+    await expect(Playlist.countDocuments({ userId })).resolves.toBe(2);
+    await expect(SpotifyConnection.countDocuments({ userId })).resolves.toBe(1);
+    await expect(SpotifyOAuthTransaction.countDocuments({ userId })).resolves.toBe(2);
+  });
+
+  it("rejects malformed reconciliation identifiers before cleanup", async () => {
+    const cleanup = vi.spyOn(Favorite, "deleteMany");
+
+    await expect(cleanupAcceptedAccountDeletion("invalid-user-id"))
+      .rejects.toMatchObject({ code: "invalid_generation_context" });
+
+    expect(cleanup).not.toHaveBeenCalled();
+  });
+
 });
