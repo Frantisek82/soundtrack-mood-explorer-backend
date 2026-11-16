@@ -2,6 +2,7 @@ export function getCorsHeaders(origin?: string | null) {
   const allowedOrigins = [
     "http://localhost:3001",
     "https://soundtrack-mood-explorer-frontend.vercel.app",
+    "http://127.0.0.1:3001",
   ];
 
   const isPreviewDeployment =
