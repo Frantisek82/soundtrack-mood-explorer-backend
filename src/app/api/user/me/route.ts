@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 
 import User from "@/models/User";
 import Favorite from "@/models/Favorite";
+import Playlist from "@/models/Playlist";
 import { verifyToken } from "@/lib/jwt";
 import { connectDB } from "@/lib/db";
 
@@ -118,10 +119,9 @@ export async function DELETE(req: Request) {
 
     const userId = await getUserIdFromCookies();
 
-    // Delete favorites first (cascade)
-    await Favorite.deleteMany({
-      userId: new mongoose.Types.ObjectId(userId),
-    });
+    const ownerId = new mongoose.Types.ObjectId(userId);
+    await Favorite.deleteMany({ userId: ownerId });
+    await Playlist.deleteMany({ userId: ownerId });
 
     // Delete user
     await User.findByIdAndDelete(userId);

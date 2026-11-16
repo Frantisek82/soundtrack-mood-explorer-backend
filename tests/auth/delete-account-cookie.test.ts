@@ -10,6 +10,7 @@ vi.mock("next/headers", () => ({
 
 import { DELETE } from "@/app/api/user/me/route";
 import { generateToken } from "@/lib/jwt";
+import Playlist from "@/models/Playlist";
 import User from "@/models/User";
 
 describe("DELETE /api/user/me cookie", () => {
@@ -17,11 +18,24 @@ describe("DELETE /api/user/me cookie", () => {
     cookieGetMock.mockReset();
   });
 
-  it("deletes the authenticated user and clears the token cookie", async () => {
+  it("deletes the authenticated user and their playlists, and clears the token cookie", async () => {
     const user = await User.create({
       name: "Delete Cookie User",
       email: "delete-cookie@example.com",
       password: "stored-password",
+    });
+    const otherUser = await User.create({
+      name: "Other Playlist Owner",
+      email: "other-playlist-owner@example.com",
+      password: "stored-password",
+    });
+    const ownedPlaylist = await Playlist.create({
+      userId: user._id,
+      name: "Soundtrack Picks",
+    });
+    const otherPlaylist = await Playlist.create({
+      userId: otherUser._id,
+      name: "Soundtrack Picks",
     });
 
     cookieGetMock.mockReturnValue({
@@ -43,6 +57,8 @@ describe("DELETE /api/user/me cookie", () => {
       message: "Account deleted successfully",
     });
     await expect(User.findById(user._id)).resolves.toBeNull();
+    await expect(Playlist.exists({ _id: ownedPlaylist._id })).resolves.toBeNull();
+    await expect(Playlist.exists({ _id: otherPlaylist._id })).resolves.not.toBeNull();
 
     const cookie = response.cookies.get("token");
     expect(cookie?.value).toBe("");
